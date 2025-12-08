@@ -1,7 +1,8 @@
 // src/lib/utils/onboardingUtils.ts
 import { INVITATION_EXPIRES_AT_IN_MILSEC } from "@/config/env";
 import { AppError } from "@/types/api.types";
-import { EOnboardingMethod, EOnboardingStatus, IOnboardingInvite, type TOnboarding } from "@/types/onboarding.types";
+import { EOnboardingMethod, EOnboardingStatus, IOnboardingInvite, TOnboardingContext, type TOnboarding } from "@/types/onboarding.types";
+import { ESubsidiary } from "@/types/shared.types";
 
 /**
  * True if an employee *should* be able to access /onboarding/[id]
@@ -60,4 +61,69 @@ export function buildOnboardingInvite(rawToken: string): IOnboardingInvite {
     expiresAt,
     lastSentAt: new Date(now),
   };
+}
+
+/* ------------------------------------------------------------------ */
+/* Sanitized context builder                                          */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Builds an employee-facing, sanitized onboarding context.
+ *
+ * Strips:
+ * - invite / otp (token/OTP hashes, attempts, etc.)
+ * - locationAtSubmit (precise geo)
+ * - approvedAt / terminatedAt (internal lifecycle timestamps)
+ */
+export function createOnboardingContext(onboarding: TOnboarding): TOnboardingContext {
+  const base = {
+    id:
+      // Mongoose doc: _id is ObjectId
+      (onboarding as any)._id?.toString?.() ??
+      // Lean/plain object might already have `id`
+      (onboarding as any).id ??
+      "",
+    subsidiary: onboarding.subsidiary,
+    method: onboarding.method,
+
+    firstName: onboarding.firstName,
+    lastName: onboarding.lastName,
+    email: onboarding.email,
+
+    status: onboarding.status,
+    employeeNumber: onboarding.employeeNumber,
+
+    isCompleted: onboarding.isCompleted,
+    createdAt: onboarding.createdAt,
+    updatedAt: onboarding.updatedAt,
+    submittedAt: onboarding.submittedAt,
+    completedAt: onboarding.completedAt,
+  };
+
+  switch (onboarding.subsidiary) {
+    case ESubsidiary.INDIA:
+      return {
+        ...base,
+        subsidiary: ESubsidiary.INDIA,
+        indiaFormData: onboarding.indiaFormData,
+      };
+
+    case ESubsidiary.CANADA:
+      return {
+        ...base,
+        subsidiary: ESubsidiary.CANADA,
+        canadaFormData: onboarding.canadaFormData,
+      };
+
+    case ESubsidiary.USA:
+      return {
+        ...base,
+        subsidiary: ESubsidiary.USA,
+        usFormData: onboarding.usFormData,
+      };
+
+    default:
+      // Should be unreachable if TOnboarding is in sync with ESubsidiary
+      throw new AppError(500, "Unsupported subsidiary for onboarding context");
+  }
 }

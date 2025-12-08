@@ -158,13 +158,7 @@ export const POST = async (req: NextRequest) => {
     }
 
     return successResponse(201, "Onboarding created", {
-      id: (onboarding as any)._id,
-      subsidiary,
-      method,
-      status: (onboarding as any).status,
-      email,
-      firstName,
-      lastName,
+      onboarding,
     });
   } catch (error) {
     return errorResponse(error);

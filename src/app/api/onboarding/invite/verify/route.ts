@@ -170,7 +170,7 @@ export const POST = async (req: NextRequest) => {
     });
 
     return successResponse(200, "Verification code sent", {
-      onboardingId: (onboarding as any)._id,
+      onboardingId: onboarding._id,
       subsidiary: onboarding.subsidiary,
       email: onboarding.email,
     });

@@ -11,6 +11,7 @@ import { EOnboardingMethod, EOnboardingStatus, type TOnboarding, type IOnboardin
 
 import { issueOnboardingSessionCookie } from "@/lib/utils/auth/onboardingSession";
 import { attachCookies } from "@/lib/utils/auth/attachCookie";
+import { createOnboardingContext } from "@/lib/utils/onboardingUtils";
 
 // -----------------------------------------------------------------------------
 // Security-related constants for OTP verification
@@ -51,23 +52,12 @@ type OtpVerifyBody = {
  *           * return error with remainingAttempts metadata when still allowed
  *
  *  4. On success:
- *       - reset attempts to 0 and clear lockedAt (optional, but keeps it clean)
+ *       - **ONE-TIME USE**: clear onboarding.otp so this code cannot be reused
  *       - call issueOnboardingSessionCookie(onboarding, rawToken)
  *         which returns a Set-Cookie header string with:
  *           ONBOARDING_SESSION_COOKIE_NAME = rawInviteToken
  *           Max-Age = remaining lifetime of invite
- *       - return 200 with onboardingId + status for frontend redirect logic
- *
- * Response example:
- *   200 OK
- *   {
- *     "message": "Verification successful",
- *     "data": {
- *       "onboardingId": "...",
- *       "subsidiary": "...",
- *       "status": "InviteGenerated"
- *     }
- *   }
+ *       - return 200 with onboardingContext for frontend redirect logic
  *
  * Error cases:
  *  - 400: missing/invalid token or OTP, or no active OTP present
@@ -174,14 +164,13 @@ export const POST = async (req: NextRequest) => {
       });
     }
 
-    // Successful OTP → clear lock & attempts (optional but cleaner)
-    const cleanedOtpMeta: IOnboardingOtp = {
-      ...otpMeta,
-      attempts: 0,
-      lockedAt: undefined,
-    };
-
-    (onboarding as any).otp = cleanedOtpMeta;
+    // -----------------------------------------------------------------------
+    // Successful OTP → make it strictly ONE-TIME USE
+    // -----------------------------------------------------------------------
+    // Instead of resetting attempts & keeping the OTP, we clear it entirely.
+    // Any subsequent call with the same token+OTP (or any OTP) will see
+    // otpMeta === undefined and require a new OTP via /invite/verify.
+    (onboarding as any).otp = undefined;
     await (onboarding as any).save();
 
     // Issue onboarding session cookie based on the invite token
@@ -191,9 +180,7 @@ export const POST = async (req: NextRequest) => {
     );
 
     const res = successResponse(200, "Verification successful", {
-      onboardingId: (onboarding as any)._id,
-      subsidiary: onboarding.subsidiary,
-      status: onboarding.status,
+      onboardingContext: createOnboardingContext(onboarding),
     });
 
     return attachCookies(res, setCookie);

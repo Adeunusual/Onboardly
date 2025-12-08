@@ -422,3 +422,63 @@ export type TOnboarding = IIndiaOnboarding | ICanadaOnboarding | IUsOnboarding;
 
 // Mongoose hydrated document type
 export type TOnboardingDoc = HydratedDocument<TOnboarding>;
+
+/* ------------------------------------------------------------------ */
+/* Sanitized Onboarding Context (employee-facing API shape)           */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Lightweight, sanitized view of an onboarding that is safe to return
+ * from employee-facing APIs.
+ *
+ * Intentionally excludes:
+ * - invite / otp (token and OTP hashes, attempts, etc.)
+ * - locationAtSubmit (precise geo)
+ * - internal timestamps not exposed to employees (approvedAt, terminatedAt)
+ *
+ * Uses `id` instead of Mongo `_id` for cleaner API responses.
+ */
+export interface IOnboardingContextBase {
+  id: string;
+  subsidiary: ESubsidiary;
+  method: EOnboardingMethod;
+
+  firstName: string;
+  lastName: string;
+  email: string;
+
+  status: EOnboardingStatus;
+  employeeNumber?: string;
+
+  isCompleted: boolean;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+  submittedAt?: Date | string;
+  completedAt?: Date | string;
+}
+
+/**
+ * Subsidiary-discriminated sanitized onboarding contexts.
+ * These still carry full form data (including documents), but
+ * without internal security/meta fields.
+ */
+
+export interface IIndiaOnboardingContext extends IOnboardingContextBase {
+  subsidiary: ESubsidiary.INDIA;
+  indiaFormData?: IIndiaOnboardingFormData;
+}
+
+export interface ICanadaOnboardingContext extends IOnboardingContextBase {
+  subsidiary: ESubsidiary.CANADA;
+  canadaFormData?: ICanadaOnboardingFormData;
+}
+
+export interface IUsOnboardingContext extends IOnboardingContextBase {
+  subsidiary: ESubsidiary.USA;
+  usFormData?: IUsOnboardingFormData;
+}
+
+/**
+ * Union of all employee-facing onboarding contexts.
+ */
+export type TOnboardingContext = IIndiaOnboardingContext | ICanadaOnboardingContext | IUsOnboardingContext;
