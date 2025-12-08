@@ -1,0 +1,452 @@
+// src/types/onboarding.types.ts
+
+import type { IFileAsset, IGeoLocation, IResidentialAddress } from "./shared.types";
+import { ESubsidiary } from "./shared.types";
+
+/**
+ * High-level onboarding method:
+ * - digital: OTP-verified, multi-step online form
+ * - manual: HR fills data from returned PDF + documents
+ */
+export enum EOnboardingMethod {
+  DIGITAL = "digital",
+  MANUAL = "manual",
+}
+
+/**
+ * Lifecycle statuses for an onboarding record.
+ * Mirrors the spec and dashboard chips.
+ */
+export enum EOnboardingStatus {
+  InviteGenerated = "InviteGenerated",
+  ManualPDFSent = "ManualPDFSent",
+  ModificationRequested = "ModificationRequested",
+  Submitted = "Submitted",
+  Resubmitted = "Resubmitted",
+  Approved = "Approved",
+  Terminated = "Terminated",
+}
+
+/**
+ * Who performed an action in the audit log.
+ */
+export enum EOnboardingActor {
+  HR = "HR",
+  EMPLOYEE = "EMPLOYEE",
+  SYSTEM = "SYSTEM",
+}
+
+/**
+ * Gender options (per spec, binary for now).
+ */
+export enum EGender {
+  MALE = "Male",
+  FEMALE = "Female",
+}
+
+/**
+ * Highest education level.
+ */
+export enum EEducationLevel {
+  PRIMARY_SCHOOL = "PrimarySchool",
+  HIGH_SCHOOL = "HighSchoolSecondary",
+  DIPLOMA = "Diploma",
+  BACHELORS = "Bachelors",
+  MASTERS = "Masters",
+  DOCTORATE = "Doctorate",
+  OTHER = "Other",
+}
+
+/**
+ * US bank account type (Checking / Savings).
+ */
+export enum EAccountType {
+  CHECKING = "Checking",
+  SAVINGS = "Savings",
+}
+
+/**
+ * Invite metadata for digital onboarding.
+ */
+export interface IOnboardingInvite {
+  tokenHash: string;
+  expiresAt: string; // ISO date string
+  lastSentAt: string; // ISO date string
+}
+
+/**
+ * OTP metadata for digital onboarding.
+ */
+export interface IOnboardingOtp {
+  otpHash: string;
+  expiresAt: string; // ISO date string
+  attempts: number;
+  lockedAt?: string; // optional lock timestamp if you implement lockout
+}
+
+/**
+ * Single audit log entry.
+ */
+export enum EOnboardingAuditAction {
+  STATUS_CHANGED = "STATUS_CHANGED",
+  INVITE_GENERATED = "INVITE_GENERATED",
+  INVITE_RESENT = "INVITE_RESENT",
+  MODIFICATION_REQUESTED = "MODIFICATION_REQUESTED",
+  SUBMITTED = "SUBMITTED",
+  RESUBMITTED = "RESUBMITTED",
+  APPROVED = "APPROVED",
+  TERMINATED = "TERMINATED",
+  DELETED = "DELETED",
+}
+
+export interface IOnboardingAuditEntry {
+  id: string; // e.g. Mongo ObjectId as string
+  action: EOnboardingAuditAction;
+  actorType: EOnboardingActor;
+  actorEmail?: string;
+  createdAt: string; // ISO date string
+  metadata?: Record<string, unknown>;
+}
+
+/**
+ * Common contact & personal info (applies to all subsidiaries, per spec).
+ */
+export interface IPersonalInfo {
+  firstName: string;
+  lastName: string;
+  email: string; // prefilled, non-editable in UI
+  gender: EGender;
+  dateOfBirth: string; // ISO
+  canProvideProofOfAge: boolean;
+  residentialAddress: IResidentialAddress;
+
+  phoneHome?: string;
+  phoneMobile: string;
+
+  emergencyContactName: string;
+  emergencyContactNumber: string;
+}
+
+/* ------------------------------------------------------------------ */
+/* Document base shapes (internal reuse only)                         */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Base for single-file documents.
+ * Keep this very stable; add new fields to concrete document interfaces instead.
+ */
+interface IFileDocumentBase {
+  file: IFileAsset;
+}
+
+/**
+ * Base for front/back documents (passports, licenses, etc.).
+ * Keep this very stable; add new fields to concrete document interfaces instead.
+ */
+interface IFrontBackDocumentBase {
+  frontFile?: IFileAsset | null;
+  backFile?: IFileAsset | null;
+}
+
+/* ------------------------------------------------------------------ */
+/* INDIA: Government IDs & Bank Details                               */
+/* ------------------------------------------------------------------ */
+
+// Concrete INDIA document interfaces (future-safe)
+
+export interface IIndiaAadhaarCardDocument extends IFileDocumentBase {
+  // future India-specific Aadhaar fields can go here (e.g. last4, expiryDate)
+}
+
+export interface IIndiaPanCardDocument extends IFileDocumentBase {
+  // future PAN-specific fields go here
+}
+
+export interface IIndiaPassportDocument extends IFrontBackDocumentBase {
+  // future passport-specific fields go here (e.g. passportNumber, expiryDate)
+}
+
+export interface IIndiaDriversLicenseDocument extends IFrontBackDocumentBase {
+  // future license-specific fields go here (e.g. licenseNumber, class)
+}
+
+export interface IIndiaVoidChequeDocument extends IFileDocumentBase {
+  // future void-cheque-specific fields go here
+}
+
+export interface IIndiaAadhaarDetails {
+  aadhaarNumber: string;
+  card: IIndiaAadhaarCardDocument;
+}
+
+export interface IIndiaPanCard {
+  card: IIndiaPanCardDocument;
+}
+
+export interface IIndiaGovernmentIds {
+  aadhaar: IIndiaAadhaarDetails;
+  panCard: IIndiaPanCard;
+  passport: IIndiaPassportDocument; // required front/back in validation
+  driversLicense?: IIndiaDriversLicenseDocument; // optional
+}
+
+export interface IIndiaBankDetails {
+  bankName: string;
+  branchName: string;
+  accountHolderName: string;
+  accountNumber: string;
+  ifscCode: string;
+  upiId?: string;
+  voidCheque?: IIndiaVoidChequeDocument;
+}
+
+/* ------------------------------------------------------------------ */
+/* CANADA: Government IDs & Bank Details                              */
+/* ------------------------------------------------------------------ */
+
+// Concrete CANADA document interfaces
+
+export interface ICanadaSinCardDocument extends IFileDocumentBase {
+  // future SIN-card-specific fields go here
+}
+
+export interface ICanadaPassportDocument extends IFrontBackDocumentBase {
+  // future passport-specific fields go here
+}
+
+export interface ICanadaPrCardDocument extends IFrontBackDocumentBase {
+  // future PR-card-specific fields go here
+}
+
+export interface ICanadaWorkPermitDocument extends IFileDocumentBase {
+  // future work-permit-specific fields go here
+}
+
+export interface ICanadaDriversLicenseDocument extends IFrontBackDocumentBase {
+  // future license-specific fields go here
+}
+
+export interface ICanadaDirectDepositDocument extends IFileDocumentBase {
+  // future direct-deposit-specific fields go here
+}
+
+export interface ICanadaSinDetails {
+  sinNumber: string;
+  card: ICanadaSinCardDocument;
+}
+
+export interface ICanadaGovernmentIds {
+  sin: ICanadaSinDetails;
+
+  passport: ICanadaPassportDocument; // required front/back in validation
+  prCard?: ICanadaPrCardDocument;
+  workPermit?: ICanadaWorkPermitDocument;
+  driversLicense?: ICanadaDriversLicenseDocument;
+}
+
+export interface ICanadaBankDetails {
+  bankName: string;
+  institutionNumber: string;
+  transitNumber: string;
+  accountNumber: string;
+  accountHolderName: string;
+  directDepositDoc?: ICanadaDirectDepositDocument;
+}
+
+/* ------------------------------------------------------------------ */
+/* USA: Government IDs & Bank Details                                 */
+/* ------------------------------------------------------------------ */
+
+// Concrete USA document interfaces
+
+export interface IUsSsnCardDocument extends IFileDocumentBase {
+  // future SSN-card-specific fields go here
+}
+
+export interface IUsPassportDocument extends IFrontBackDocumentBase {
+  // future passport-specific fields go here
+}
+
+export interface IUsGreenCardDocument extends IFrontBackDocumentBase {
+  // future green-card-specific fields go here
+}
+
+export interface IUsWorkPermitDocument extends IFileDocumentBase {
+  // future work-permit-specific fields go here
+}
+
+export interface IUsDriversLicenseDocument extends IFrontBackDocumentBase {
+  // future license-specific fields go here
+}
+
+export interface IUsVoidChequeOrDepositSlipDocument extends IFileDocumentBase {
+  // future cheque/deposit-slip-specific fields go here
+}
+
+export interface IUsSsnDetails {
+  ssnNumber: string;
+  card: IUsSsnCardDocument;
+}
+
+export interface IUsGovernmentIds {
+  ssn: IUsSsnDetails;
+
+  passport: IUsPassportDocument; // required front/back in validation
+  greenCard?: IUsGreenCardDocument;
+  workPermit?: IUsWorkPermitDocument;
+  driversLicense?: IUsDriversLicenseDocument;
+}
+
+export interface IUsBankDetails {
+  bankName: string;
+  routingNumber: string;
+  accountNumber: string;
+  accountType: EAccountType;
+  accountHolderName: string;
+  voidChequeOrDepositSlip?: IUsVoidChequeOrDepositSlipDocument;
+}
+
+/* ------------------------------------------------------------------ */
+/* Education, Employment, Declaration & Signature                     */
+/* ------------------------------------------------------------------ */
+
+export interface IEducationDetails {
+  highestLevel: EEducationLevel;
+
+  // Primary school fields
+  schoolName?: string;
+  schoolLocation?: string;
+  primaryYearCompleted?: number;
+
+  // High school
+  highSchoolInstitutionName?: string;
+  highSchoolBoard?: string;
+  highSchoolStream?: string;
+  highSchoolYearCompleted?: number;
+  highSchoolGradeOrPercentage?: string;
+
+  // Diploma / Bachelor / Master / PhD / Other
+  institutionName?: string;
+  universityOrBoard?: string;
+  fieldOfStudy?: string;
+  startYear?: number;
+  endYear?: number;
+  gradeOrCgpa?: string;
+}
+
+/**
+ * One employment history entry.
+ */
+export interface IEmploymentHistoryEntry {
+  organizationName: string;
+  designation: string;
+  startDate: string; // ISO
+  endDate: string; // ISO
+  reasonForLeaving: string;
+  experienceCertificateFile?: IFileAsset | null;
+}
+
+/**
+ * Declaration & signature at the end of the form.
+ * For business rules: signature files must be images (validation layer).
+ */
+export interface ISignatureInfo {
+  file: IFileAsset; // image stored in S3
+  signedAt: string; // ISO date
+}
+
+export interface IDeclarationAndSignature {
+  hasAcceptedDeclaration: boolean;
+  signature: ISignatureInfo;
+  declarationDate: string; // ISO date (UI default = today)
+}
+
+/* ------------------------------------------------------------------ */
+/* Per-subsidiary Form Data                                           */
+/* ------------------------------------------------------------------ */
+
+export interface IIndiaOnboardingFormData {
+  personalInfo: IPersonalInfo;
+  governmentIds: IIndiaGovernmentIds;
+  education: IEducationDetails[];
+  employmentHistory: IEmploymentHistoryEntry[];
+  bankDetails: IIndiaBankDetails;
+  declaration: IDeclarationAndSignature;
+}
+
+export interface ICanadaOnboardingFormData {
+  personalInfo: IPersonalInfo;
+  governmentIds: ICanadaGovernmentIds;
+  education: IEducationDetails[];
+  employmentHistory: IEmploymentHistoryEntry[];
+  bankDetails: ICanadaBankDetails;
+  declaration: IDeclarationAndSignature;
+}
+
+export interface IUsOnboardingFormData {
+  personalInfo: IPersonalInfo;
+  governmentIds: IUsGovernmentIds;
+  education: IEducationDetails[];
+  employmentHistory: IEmploymentHistoryEntry[];
+  bankDetails: IUsBankDetails;
+  declaration: IDeclarationAndSignature;
+}
+
+/**
+ * Convenience union for form data; use along with subsidiary discrimination.
+ */
+export type TOnboardingFormData = IIndiaOnboardingFormData | ICanadaOnboardingFormData | IUsOnboardingFormData;
+
+/* ------------------------------------------------------------------ */
+/* Root Onboarding entity                                             */
+/* ------------------------------------------------------------------ */
+
+export interface IOnboardingBase {
+  _id: string;
+  subsidiary: ESubsidiary;
+  method: EOnboardingMethod;
+
+  firstName: string;
+  lastName: string;
+  email: string;
+
+  status: EOnboardingStatus;
+  employeeNumber?: string; // unique per subsidiary when set
+
+  invite?: IOnboardingInvite; // digital only
+  otp?: IOnboardingOtp; // digital only
+
+  locationAtSubmit?: IGeoLocation;
+
+  isCompleted: boolean;
+  createdAt: string;
+  updatedAt: string;
+  submittedAt?: string;
+  completedAt?: string;
+  approvedAt?: string;
+  terminatedAt?: string;
+
+  auditLog: IOnboardingAuditEntry[];
+}
+
+/**
+ * Subsidiary-discriminated onboarding types — lets TS narrow formData
+ * by subsidiary where needed.
+ */
+
+export interface IIndiaOnboarding extends IOnboardingBase {
+  subsidiary: ESubsidiary.INDIA;
+  formData?: IIndiaOnboardingFormData;
+}
+
+export interface ICanadaOnboarding extends IOnboardingBase {
+  subsidiary: ESubsidiary.CANADA;
+  formData?: ICanadaOnboardingFormData;
+}
+
+export interface IUsOnboarding extends IOnboardingBase {
+  subsidiary: ESubsidiary.USA;
+  formData?: IUsOnboardingFormData;
+}
+
+export type TOnboarding = IIndiaOnboarding | ICanadaOnboarding | IUsOnboarding;
