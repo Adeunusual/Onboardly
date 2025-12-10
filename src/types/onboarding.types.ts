@@ -379,6 +379,10 @@ export interface IOnboardingBase {
   email: string;
 
   status: EOnboardingStatus;
+
+  modificationRequestMessage?: string;
+  modificationRequestedAt?: Date | string;
+
   employeeNumber?: string; // unique per subsidiary when set
 
   invite?: IOnboardingInvite; // digital only
@@ -446,6 +450,10 @@ export interface IOnboardingContextBase {
   email: string;
 
   status: EOnboardingStatus;
+
+  modificationRequestMessage?: string;
+  modificationRequestedAt?: Date | string;
+
   employeeNumber?: string;
 
   isCompleted: boolean;
