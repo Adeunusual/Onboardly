@@ -16,6 +16,9 @@ interface AppJWT {
   // roles?: string[];
 }
 
+// Hard-coded admin allowlist
+const ADMIN_EMAILS = new Set<string>(["ridoy@sspgroup.com", "atanda.faruq@sspgroup.com"]);
+
 // Dummy admin user used when auth is disabled
 const DUMMY_ADMIN_USER: IUser = {
   id: "dev-admin",
@@ -44,6 +47,7 @@ async function buildNextRequest(): Promise<NextRequest> {
  *
  * - Reads cookies via `cookies()`
  * - Uses `getToken` from NextAuth to verify/decode the JWT
+ * - Only allows hard-coded admin emails when a token exists
  * - When `DISABLE_AUTH` is true and no valid user is found, returns a dummy admin user
  * - Otherwise returns a strongly typed `IUser` object or `null`
  */
@@ -62,8 +66,21 @@ export const currentUser = cache(async (): Promise<IUser | null> => {
     })) as AppJWT | null;
   }
 
+  // No usable token → fall back to dummy in dev, or null in prod
   if (!token?.userId || !token?.email || !token?.name) {
-    // If auth is disabled, fall back to dummy admin when no real user
+    if (DISABLE_AUTH) {
+      return DUMMY_ADMIN_USER;
+    }
+    return null;
+  }
+
+  // Enforce hard-coded admin allowlist on the token email
+  const emailLower = token.email.toLowerCase();
+  const isAllowedAdmin = ADMIN_EMAILS.has(emailLower);
+
+  if (!isAllowedAdmin) {
+    // Treat as unauthenticated.
+    // In dev mode (DISABLE_AUTH=true), still allow dummy admin if we end up with "no user".
     if (DISABLE_AUTH) {
       return DUMMY_ADMIN_USER;
     }
