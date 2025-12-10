@@ -1,6 +1,6 @@
 // src/types/onboarding.types.ts
 
-import { HydratedDocument } from "mongoose";
+import type { HydratedDocument } from "mongoose";
 import type {
   IFileAsset,
   IGeoLocation,
