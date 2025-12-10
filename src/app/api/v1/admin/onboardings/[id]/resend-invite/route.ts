@@ -15,12 +15,12 @@ import { EOnboardingMethod, EOnboardingStatus } from "@/types/onboarding.types";
 import { EOnboardingActor, EOnboardingAuditAction } from "@/types/onboardingAuditLog.types";
 
 /* -------------------- POST /admin/onboardings/[id]/resend-invite -------------------- */
-export const POST = async (req: NextRequest, { params }: { params: { id: string } }) => {
+export const POST = async (req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   try {
     await connectDB();
     const user = await guard();
 
-    const { id } = params;
+    const { id } = await params;
     const baseUrl = req.nextUrl.origin;
 
     const onboarding = await OnboardingModel.findById(id);
