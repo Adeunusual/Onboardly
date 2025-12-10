@@ -177,6 +177,7 @@ function validateEducationEntry(entry: any, label: string) {
 function validateEducationArray(education: any) {
   vAssert(Array.isArray(education), "education must be an array");
   vAssert(education.length > 0, "At least one education entry is required");
+  vAssert(education.length <= 1, "You can only enter up to 1 education entry");
 
   for (let i = 0; i < education.length; i++) {
     validateEducationEntry(education[i], `education[${i}]`);
@@ -203,6 +204,8 @@ function validateEmploymentHistoryArray(employmentHistory: any, opts: { requireA
   if (opts.requireAtLeastOne) {
     vAssert(employmentHistory.length > 0, "At least one employment history entry is required");
   }
+
+  vAssert(employmentHistory.length <= 3, "You can only enter up to 3 employment history entries");
 
   for (let i = 0; i < employmentHistory.length; i++) {
     validateEmploymentHistoryEntry(employmentHistory[i], `employmentHistory[${i}]`);

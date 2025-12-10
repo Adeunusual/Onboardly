@@ -111,12 +111,27 @@ export const indiaOnboardingFormDataSchema = new Schema<IIndiaOnboardingFormData
   {
     personalInfo: { type: personalInfoSchema, required: true },
     governmentIds: { type: indiaGovernmentIdsSchema, required: true },
-    education: { type: [educationDetailsSchema], required: true },
+
+    education: {
+      type: [educationDetailsSchema],
+      required: true,
+      validate: {
+        validator: (val: any[]) => Array.isArray(val) && val.length >= 1 && val.length <= 1,
+        message: "education must have exactly 1 entry",
+      },
+    },
+
     hasPreviousEmployment: { type: Boolean, required: true },
+
     employmentHistory: {
       type: [employmentHistoryEntrySchema],
       required: true,
+      validate: {
+        validator: (val: any[]) => Array.isArray(val) && val.length <= 3,
+        message: "employmentHistory cannot have more than 3 entries",
+      },
     },
+
     bankDetails: { type: indiaBankDetailsSchema, required: true },
     declaration: { type: declarationAndSignatureSchema, required: true },
   },
@@ -195,12 +210,27 @@ export const canadaOnboardingFormDataSchema = new Schema<ICanadaOnboardingFormDa
   {
     personalInfo: { type: personalInfoSchema, required: true },
     governmentIds: { type: canadaGovernmentIdsSchema, required: true },
-    education: { type: [educationDetailsSchema], required: true },
+
+    education: {
+      type: [educationDetailsSchema],
+      required: true,
+      validate: {
+        validator: (val: any[]) => Array.isArray(val) && val.length >= 1 && val.length <= 1,
+        message: "education must have exactly 1 entry",
+      },
+    },
+
     hasPreviousEmployment: { type: Boolean, required: true },
+
     employmentHistory: {
       type: [employmentHistoryEntrySchema],
       required: true,
+      validate: {
+        validator: (val: any[]) => Array.isArray(val) && val.length <= 3,
+        message: "employmentHistory cannot have more than 3 entries",
+      },
     },
+
     bankDetails: { type: canadaBankDetailsSchema, required: true },
     declaration: { type: declarationAndSignatureSchema, required: true },
   },
@@ -280,12 +310,27 @@ export const usOnboardingFormDataSchema = new Schema<IUsOnboardingFormData>(
   {
     personalInfo: { type: personalInfoSchema, required: true },
     governmentIds: { type: usGovernmentIdsSchema, required: true },
-    education: { type: [educationDetailsSchema], required: true },
+
+    education: {
+      type: [educationDetailsSchema],
+      required: true,
+      validate: {
+        validator: (val: any[]) => Array.isArray(val) && val.length >= 1 && val.length <= 1,
+        message: "education must have exactly 1 entry",
+      },
+    },
+
     hasPreviousEmployment: { type: Boolean, required: true },
+
     employmentHistory: {
       type: [employmentHistoryEntrySchema],
       required: true,
+      validate: {
+        validator: (val: any[]) => Array.isArray(val) && val.length <= 3,
+        message: "employmentHistory cannot have more than 3 entries",
+      },
     },
+
     bankDetails: { type: usBankDetailsSchema, required: true },
     declaration: { type: declarationAndSignatureSchema, required: true },
   },
