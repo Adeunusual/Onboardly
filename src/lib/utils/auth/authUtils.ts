@@ -7,17 +7,14 @@ import { getToken } from "next-auth/jwt";
 import type { IUser } from "@/types/user.types";
 import { AUTH_COOKIE_NAME, DISABLE_AUTH, NEXTAUTH_SECRET } from "@/config/env";
 import { AppError } from "@/types/api.types";
+import { isAdminEmail } from "@/config/adminAuth";
 
 interface AppJWT {
   userId?: string;
   email?: string;
   name?: string;
   picture?: string;
-  // roles?: string[];
 }
-
-// Hard-coded admin allowlist
-const ADMIN_EMAILS = new Set<string>(["ridoy@sspgroup.com", "atanda.faruq@sspgroup.com"]);
 
 // Dummy admin user used when auth is disabled
 const DUMMY_ADMIN_USER: IUser = {
@@ -27,10 +24,6 @@ const DUMMY_ADMIN_USER: IUser = {
   picture: undefined,
 };
 
-/**
- * Builds a minimal NextRequest carrying the cookie header,
- * so `getToken` can correctly parse the session token in App Router.
- */
 async function buildNextRequest(): Promise<NextRequest> {
   const jar = await cookies();
   const cookieHeader = jar
@@ -42,15 +35,6 @@ async function buildNextRequest(): Promise<NextRequest> {
   return new NextRequest("https://internal.local/", { headers });
 }
 
-/**
- * Returns the currently authenticated user from the session token.
- *
- * - Reads cookies via `cookies()`
- * - Uses `getToken` from NextAuth to verify/decode the JWT
- * - Only allows hard-coded admin emails when a token exists
- * - When `DISABLE_AUTH` is true and no valid user is found, returns a dummy admin user
- * - Otherwise returns a strongly typed `IUser` object or `null`
- */
 export const currentUser = cache(async (): Promise<IUser | null> => {
   const jar = await cookies();
   const raw = jar.get(AUTH_COOKIE_NAME)?.value;
@@ -66,21 +50,30 @@ export const currentUser = cache(async (): Promise<IUser | null> => {
     })) as AppJWT | null;
   }
 
-  // No usable token → fall back to dummy in dev, or null in prod
+  // Small helper so we don't repeat ourselves
+  const clearAuthCookie = () => {
+    // Only try to delete if we actually had a cookie
+    if (raw) {
+      jar.delete(AUTH_COOKIE_NAME);
+    }
+  };
+
+  // No usable token → clear cookie (if present) and fall back
   if (!token?.userId || !token?.email || !token?.name) {
+    clearAuthCookie();
+
     if (DISABLE_AUTH) {
       return DUMMY_ADMIN_USER;
     }
     return null;
   }
 
-  // Enforce hard-coded admin allowlist on the token email
-  const emailLower = token.email.toLowerCase();
-  const isAllowedAdmin = ADMIN_EMAILS.has(emailLower);
-
+  // Enforce hard-coded admin allowlist (via shared helper)
+  const isAllowedAdmin = isAdminEmail(token.email);
   if (!isAllowedAdmin) {
-    // Treat as unauthenticated.
-    // In dev mode (DISABLE_AUTH=true), still allow dummy admin if we end up with "no user".
+    // <── THIS IS THE IMPORTANT PART
+    clearAuthCookie();
+
     if (DISABLE_AUTH) {
       return DUMMY_ADMIN_USER;
     }
@@ -97,19 +90,10 @@ export const currentUser = cache(async (): Promise<IUser | null> => {
   return user;
 });
 
-/**
- * Guard method: ensures a user is authenticated.
- *
- * - Calls `currentUser`
- * - Throws `AppError(401)` if no valid user is found and auth is enabled
- * - When `DISABLE_AUTH` is true, effectively behaves as always logged in
- *   (returns the dummy admin user)
- */
 export const guard = cache(async (): Promise<IUser> => {
   const user = await currentUser();
 
   if (!user) {
-    // When auth is enabled and no user, this is a real unauthenticated case
     throw new AppError(401, "Unauthenticated");
   }
 

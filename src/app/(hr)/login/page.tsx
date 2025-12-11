@@ -28,11 +28,11 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center px-4">
       {/* Logo */}
       <div className="mb-6">
-        <Image src="/images/SSP-Truck-LineFullLogo.png" alt="SSP Logo" width={180} height={140} priority />
+        <Image src="/assets/logos/NPTlogo.png" alt="SSP Logo" width={180} height={140} priority />
       </div>
 
-      <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-1 text-center">Welcome to TraxYard</h1>
-      <p className="text-sm text-gray-600 mb-4 text-center">Yard Inventory Management System</p>
+      <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-1 text-center">Welcome to NPT Onboard</h1>
+      <p className="text-sm text-gray-600 mb-4 text-center">Employee hiring system</p>
 
       {/* Error message from NextAuth / allowlist */}
       {errorMsg && <p className="mb-4 text-sm text-red-600 text-center max-w-md">{errorMsg}</p>}
@@ -98,13 +98,13 @@ export default function LoginPage() {
             }}
             className="w-full bg-black hover:bg-neutral-800 text-white font-semibold py-2.5 rounded-md flex items-center justify-center gap-2 transition duration-200 cursor-pointer"
           >
-            <Image src="/images/microsoft-logo.png" alt="Microsoft Logo" width={20} height={20} />
+            <Image src="/assets/logos/microsoft-logo.png" alt="Microsoft Logo" width={20} height={20} />
             <span>Sign In With Microsoft</span>
           </button>
         </div>
       </div>
 
-      <footer className="mt-10 text-xs text-gray-500 text-center">© SSP Group of Companies 2025</footer>
+      <footer className="mt-10 text-xs text-gray-500 text-center">© NPT Group 2025</footer>
     </div>
   );
 }

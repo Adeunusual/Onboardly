@@ -11,16 +11,6 @@ export default function ProfileDropdown() {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
-  const user = session?.user as { name?: string | null; email?: string | null; image?: string | null } | undefined;
-
-  // If not authenticated or no user, don't render the dropdown
-  if (status !== "authenticated" || !user) {
-    return null;
-  }
-
-  const userName = user.name || "User";
-  const userEmail = user.email || "";
-
   // Close on outside click
   useEffect(() => {
     function onClick(e: MouseEvent) {
@@ -49,6 +39,16 @@ export default function ProfileDropdown() {
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [open]);
 
+  const user = session?.user as { name?: string | null; email?: string | null; image?: string | null } | undefined;
+
+  // If not authenticated or no user, don't render the dropdown
+  if (status !== "authenticated" || !user) {
+    return null;
+  }
+
+  const userName = user.name || "User";
+  const userEmail = user.email || "";
+
   return (
     <div ref={ref} className="ml-auto relative flex items-center">
       <button
@@ -73,7 +73,6 @@ export default function ProfileDropdown() {
             type="button"
             onClick={() => {
               setOpen(false);
-              // NextAuth signOut, redirect back to login
               signOut({ callbackUrl: "/login" });
             }}
             className="block w-full text-left px-4 py-3 text-sm text-slate-700 hover:bg-slate-100 active:scale-[0.99] transition"
