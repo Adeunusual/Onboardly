@@ -141,22 +141,20 @@ export function createOnboardingContext(onboarding: TOnboarding): TOnboardingCon
 export interface CreateOnboardingAuditLogParams {
   onboardingId: string;
   action: EOnboardingAuditAction;
+
+  /** Human-friendly summary for UI */
+  message: string;
+
   actor: {
     type: EOnboardingActor;
     id?: string;
     name: string;
     email: string;
   };
+
   metadata?: Record<string, unknown>;
 }
 
-/**
- * Fire-and-forget helper for creating onboarding audit log entries.
- *
- * Usage rules:
- *  - Call ONLY after the main operation has succeeded (DB + side effects).
- *  - If logging fails, the error is swallowed and only logged to stderr.
- */
 export async function createOnboardingAuditLogSafe(params: CreateOnboardingAuditLogParams): Promise<void> {
   try {
     await OnboardingAuditLogModel.create({
@@ -168,10 +166,10 @@ export async function createOnboardingAuditLogSafe(params: CreateOnboardingAudit
         name: params.actor.name,
         email: params.actor.email,
       },
+      message: params.message,
       metadata: params.metadata,
     } as any);
   } catch (err) {
-    // Non-critical: never break the main request because of audit logging
     console.error("Failed to create onboarding audit log entry", err);
   }
 }

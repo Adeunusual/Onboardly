@@ -36,10 +36,15 @@ export type TOnboardingAuditActor = {
 };
 
 export interface IOnboardingAuditLog {
-  id: string; // e.g. Mongo ObjectId as string
+  id: string;
   onboardingId: Schema.Types.ObjectId | string;
   action: EOnboardingAuditAction;
   actor: TOnboardingAuditActor;
-  createdAt: Date | string; // ISO date string
+  createdAt: Date | string;
+
+  /** Human-friendly text for UI (primary display line). */
+  message: string;
+
+  /** Technical structured context (JSON viewer in UI). */
   metadata?: Record<string, unknown>;
 }

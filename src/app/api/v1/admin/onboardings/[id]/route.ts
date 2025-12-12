@@ -279,6 +279,7 @@ export const PUT = async (req: NextRequest, { params }: { params: Promise<{ id: 
         name: user.name,
         email: user.email,
       },
+      message: `Onboarding form details updated by ${user.name}.`,
       metadata: {
         previousStatus: prevStatus,
         newStatus: onboarding.status,

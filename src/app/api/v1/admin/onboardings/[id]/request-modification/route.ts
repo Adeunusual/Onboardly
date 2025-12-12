@@ -109,6 +109,7 @@ export const POST = async (req: NextRequest, { params }: { params: Promise<{ id:
         name: user.name,
         email: user.email,
       },
+      message: `Modifications requested by ${user.name}; a new onboarding link was sent to the employee.`,
       metadata: {
         previousStatus: prevStatus,
         newStatus: onboarding.status,

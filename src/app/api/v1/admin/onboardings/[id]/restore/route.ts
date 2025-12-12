@@ -86,6 +86,7 @@ export const POST = async (_req: NextRequest, { params }: { params: Promise<{ id
         name: user.name,
         email: user.email,
       },
+      message: `Onboarding restored by ${user.name} (status changed from Terminated to ${newStatus}).`,
       metadata: {
         previousStatus: prevStatus,
         newStatus,

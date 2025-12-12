@@ -300,6 +300,7 @@ export const POST = async (req: NextRequest, { params }: { params: Promise<{ id:
         name: `${onboarding.firstName} ${onboarding.lastName}`.trim(),
         email: onboarding.email,
       },
+      message: auditAction === EOnboardingAuditAction.SUBMITTED ? `Onboarding form submitted by the employee.` : `Onboarding form re-submitted by the employee after requested changes.`,
       metadata: {
         previousStatus: prevStatus,
         newStatus: nextStatus,

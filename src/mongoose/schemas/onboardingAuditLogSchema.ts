@@ -47,6 +47,8 @@ export const onboardingAuditLogSchema = new Schema<IOnboardingAuditLog>(
       required: true,
     },
 
+    message: { type: String, required: true },
+
     metadata: {
       type: Schema.Types.Mixed,
     },

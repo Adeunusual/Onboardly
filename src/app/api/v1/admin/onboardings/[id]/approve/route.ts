@@ -117,6 +117,9 @@ export const POST = async (req: NextRequest, { params }: { params: Promise<{ id:
         name: user.name,
         email: user.email,
       },
+      message: onboarding.employeeNumber
+        ? `Onboarding approved by ${user.name}; employee number assigned (${onboarding.employeeNumber}) and approval email sent to the employee.`
+        : `Onboarding approved by ${user.name} and approval email sent to the employee.`,
       metadata: {
         previousStatus: prevStatus,
         newStatus: onboarding.status,
