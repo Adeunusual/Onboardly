@@ -1,41 +1,60 @@
 "use client";
 
 import * as React from "react";
-import { useFormContext, type FieldPath } from "react-hook-form";
+import { useFormContext, useController, type FieldPath } from "react-hook-form";
 
-import type { IndiaOnboardingFormValues } from "../india/indiaFormSchema";
+import type {
+  IndiaOnboardingFormValues,
+  IndiaOnboardingFormInput,
+} from "../india/indiaFormSchema";
 import { getErrorAtPath } from "./getErrorAtPath";
 
 type RHFCheckboxProps = Omit<
   React.InputHTMLAttributes<HTMLInputElement>,
-  "name" | "type"
+  "name" | "type" | "checked"
 > & {
-  name: FieldPath<IndiaOnboardingFormValues>;
+  name: FieldPath<IndiaOnboardingFormInput>;
   label: string | React.ReactNode;
 };
 
-export function RHFCheckbox({ name, label, ...rest }: RHFCheckboxProps) {
+export function RHFCheckbox({
+  name,
+  label,
+  className,
+  ...rest
+}: RHFCheckboxProps) {
   const {
-    register,
+    control,
     formState: { errors },
   } = useFormContext<IndiaOnboardingFormValues>();
 
-  const fieldError = getErrorAtPath(errors, name);
-  const errorMessage = fieldError?.message?.toString();
+  const { field } = useController({
+    name,
+    control,
+    defaultValue: false as any,
+  });
+
+  const error = getErrorAtPath(errors, name);
+  const errorMessage = error?.message as string | undefined;
 
   return (
-    <div className="space-y-1.5">
+    <div className={className}>
       <label className="flex items-center gap-2 text-sm text-slate-800">
         <input
           type="checkbox"
           data-field={name}
-          {...register(name)}
+          checked={!!field.value}
+          onChange={(e) => field.onChange(e.target.checked)}
+          onBlur={field.onBlur}
+          ref={field.ref}
           {...rest}
           className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
         />
         <span>{label}</span>
       </label>
-      {errorMessage && <p className="text-xs text-red-600">{errorMessage}</p>}
+      {errorMessage && (
+        <p className="mt-1 text-xs text-red-600">{errorMessage}</p>
+      )}
     </div>
   );
 }

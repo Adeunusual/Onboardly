@@ -7,14 +7,17 @@ import { useFormContext, Controller, type FieldPath } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils/cn";
 
-import type { IndiaOnboardingFormValues } from "../india/indiaFormSchema";
+import type {
+  IndiaOnboardingFormValues,
+  IndiaOnboardingFormInput,
+} from "../india/indiaFormSchema";
 import { FormField } from "./FormField";
 
 type RHFTextInputProps = Omit<
   React.InputHTMLAttributes<HTMLInputElement>,
   "name"
 > & {
-  name: FieldPath<IndiaOnboardingFormValues>;
+  name: FieldPath<IndiaOnboardingFormInput>;
   label: string;
   containerClassName?: string;
 };

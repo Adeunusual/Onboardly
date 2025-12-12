@@ -11,8 +11,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 
 import {
   indiaOnboardingFormSchema,
+  type IndiaOnboardingFormInput,
   type IndiaOnboardingFormValues,
 } from "./indiaFormSchema";
+
 import type { TOnboardingContext } from "@/types/onboarding.types";
 import { ONBOARDING_STEPS } from "@/config/onboardingSteps";
 
@@ -20,6 +22,12 @@ import {
   PersonalInfoSection,
   PERSONAL_INFO_FIELD_PATHS,
 } from "./sections/PersonalInfoSection";
+import {
+  EducationSection,
+  EDUCATION_FIELD_PATHS,
+} from "./sections/EducationSection";
+import { EmploymentSection } from "./sections/EmploymentSection";
+
 import { getErrorAtPath } from "../common/getErrorAtPath";
 
 type IndiaOnboardingFormProps = {
@@ -37,10 +45,10 @@ const STEP_IDS = ONBOARDING_STEPS.map((s) => s.id) as StepId[];
  * Map of step id to the field paths belonging to that section.
  * For now only "personal" is populated; others will be filled as we implement them.
  */
-const STEP_FIELD_MAP: Record<StepId, FieldPath<IndiaOnboardingFormValues>[]> = {
+const STEP_FIELD_MAP: Record<StepId, FieldPath<IndiaOnboardingFormInput>[]> = {
   personal: PERSONAL_INFO_FIELD_PATHS,
-  education: [],
-  employment: [],
+  education: EDUCATION_FIELD_PATHS,
+  employment: ["hasPreviousEmployment", "employmentHistory"],
   banking: [],
   declaration: [],
   review: [],
@@ -52,7 +60,11 @@ export function IndiaOnboardingForm({
   currentIndex,
   onStepChange,
 }: IndiaOnboardingFormProps) {
-  const methods = useForm<IndiaOnboardingFormValues>({
+  const methods = useForm<
+    IndiaOnboardingFormInput,
+    unknown,
+    IndiaOnboardingFormValues
+  >({
     resolver: zodResolver(indiaOnboardingFormSchema),
     mode: "onChange",
     reValidateMode: "onChange",
@@ -92,11 +104,71 @@ export function IndiaOnboardingForm({
     }
   }
 
+  function findFirstEmploymentErrorPath(errs: typeof errors): string | null {
+    const arr = errs.employmentHistory;
+
+    // array-level error (rare) -> scroll to toggle / section
+    if (!arr) return null;
+
+    // RHF field array errors are usually: errors.employmentHistory[index].fieldName
+    if (Array.isArray(arr)) {
+      for (let i = 0; i < arr.length; i++) {
+        const row = arr[i] as any;
+        if (!row) continue;
+
+        const order = [
+          "organizationName",
+          "designation",
+          "startDate",
+          "endDate",
+          "reasonForLeaving",
+          "experienceCertificateFile",
+        ];
+
+        for (const key of order) {
+          if (row?.[key]?.message) {
+            return `employmentHistory.${i}.${key}`;
+          }
+        }
+      }
+    }
+
+    return null;
+  }
+
   async function handleNext() {
     const stepId = STEP_IDS[currentIndex];
+
+    // Custom gating for Employment step (dynamic field array)
+    if (stepId === "employment") {
+      const ok = await trigger(
+        ["hasPreviousEmployment", "employmentHistory"] as any,
+        { shouldFocus: false }
+      );
+
+      if (!ok) {
+        // Scroll to the *first errored* employment field (not just the first field in the DOM)
+        const firstEmploymentErrorPath = findFirstEmploymentErrorPath(errors);
+
+        if (firstEmploymentErrorPath) {
+          scrollToField(firstEmploymentErrorPath, "employment");
+        } else {
+          // fallback
+          scrollToSection("employment");
+        }
+
+        return;
+      }
+
+      const nextIndex = Math.min(ONBOARDING_STEPS.length - 1, currentIndex + 1);
+      onStepChange(nextIndex);
+      scrollToSection(STEP_IDS[nextIndex]);
+      return;
+    }
+
+    // Generic path for other steps
     const fieldPaths = STEP_FIELD_MAP[stepId] ?? [];
 
-    // If this step has fields, validate only those.
     if (fieldPaths.length > 0) {
       const ok = await trigger(fieldPaths as any, { shouldFocus: false });
 
@@ -172,18 +244,14 @@ export function IndiaOnboardingForm({
           />
         </section>
 
-        {/* Step 2–6 placeholders – we’ll replace with real sections later */}
+        {/* Step 2: Education */}
         <section
           ref={(el) => {
             sectionRefs.current.education = el;
           }}
           aria-label="Education"
         >
-          {currentIndex >= 1 && (
-            <PlaceholderSection title="Education">
-              Education section will be implemented next.
-            </PlaceholderSection>
-          )}
+          {currentIndex >= 1 && <EducationSection isReadOnly={isReadOnly} />}
         </section>
 
         <section
@@ -192,11 +260,7 @@ export function IndiaOnboardingForm({
           }}
           aria-label="Employment history"
         >
-          {currentIndex >= 2 && (
-            <PlaceholderSection title="Employment history">
-              Employment history section will be implemented next.
-            </PlaceholderSection>
-          )}
+          {currentIndex >= 2 && <EmploymentSection isReadOnly={isReadOnly} />}
         </section>
 
         <section
@@ -306,8 +370,9 @@ function buildDefaultValuesFromOnboarding(
       emergencyContactName: "",
       emergencyContactNumber: "",
     },
-    // we can leave the rest of the form partial for now;
-    // we'll fill them out when we implement the later steps.
+    education: [],
+    employmentHistory: [],
+    // bankDetails / declaration will be filled as we implement those sections
   };
 }
 

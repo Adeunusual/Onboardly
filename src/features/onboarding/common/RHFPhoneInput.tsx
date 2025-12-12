@@ -1,114 +1,110 @@
-// src/features/onboarding/common/RHFPhoneInput.tsx
 "use client";
 
 import * as React from "react";
-import { useFormContext, useWatch, type FieldPath } from "react-hook-form";
-
+import { Controller, useFormContext, type FieldPath } from "react-hook-form";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils/cn";
-import type { IndiaOnboardingFormValues } from "../india/indiaFormSchema";
+import type {
+  IndiaOnboardingFormValues,
+  IndiaOnboardingFormInput,
+} from "../india/indiaFormSchema";
 import { FormField } from "./FormField";
-import { getErrorAtPath } from "./getErrorAtPath";
 
 type RHFPhoneInputProps = {
-  name: FieldPath<IndiaOnboardingFormValues>;
+  name: FieldPath<IndiaOnboardingFormInput>;
   label: string;
+  countryCodePrefix?: string; // e.g. "+91", "+1"
+  /** Max digits for this phone field (default 10). */
+  maxDigits?: number;
+  /**
+   * Optional formatter for displaying the digits.
+   * Receives just the numeric digits; returns formatted string.
+   */
+  formatDigits?: (digits: string) => string;
+  placeholder?: string;
   containerClassName?: string;
   disabled?: boolean;
-  placeholder?: string;
 };
 
-/**
- * Formats an Indian phone number as the user types.
- * Raw value is always stored as 10 digits in the form state.
- */
-function formatIndianPhone(raw: string): string {
-  const digits = raw.replace(/\D/g, "").slice(0, 10);
-  if (digits.length <= 5) return digits;
-  return `${digits.slice(0, 5)} ${digits.slice(5)}`;
+/** Default 10-digit layout: 123 456 7890 */
+function defaultFormatDigits(digits: string): string {
+  if (digits.length <= 3) return digits;
+  if (digits.length <= 6) return `${digits.slice(0, 3)} ${digits.slice(3)}`;
+  if (digits.length <= 10)
+    return `${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6)}`;
+  return digits;
 }
 
 export function RHFPhoneInput({
   name,
   label,
+  countryCodePrefix = "+91",
+  maxDigits = 10,
+  formatDigits = defaultFormatDigits,
+  placeholder,
   containerClassName,
   disabled,
-  placeholder = "98765 43210",
 }: RHFPhoneInputProps) {
-  const {
-    control,
-    register,
-    setValue,
-    formState: { errors },
-  } = useFormContext<IndiaOnboardingFormValues>();
-
-  const fieldError = getErrorAtPath(errors, name);
-  const errorMessage = fieldError?.message?.toString();
-  const hasError = Boolean(errorMessage);
-
-  const rawValue = useWatch({
-    control,
-    name,
-  }) as string | undefined;
-
-  const displayValue = formatIndianPhone(rawValue ?? "");
-
-  // Register to give RHF the ref + blur handler, but we manage value ourselves
-  const { ref, onBlur } = register(name);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
-
-    setValue(name, digits, {
-      shouldValidate: true,
-      shouldDirty: true,
-    });
-  };
+  const { control } = useFormContext<IndiaOnboardingFormValues>();
 
   return (
-    <FormField
-      label={label}
-      htmlFor={name}
-      error={errorMessage}
-      className={containerClassName}
-    >
-      <div
-        className={cn(
-          "mt-1 flex items-stretch rounded-lg border bg-white text-sm shadow-sm",
-          "border-slate-200 focus-within:border-slate-400 focus-within:ring-1 focus-within:ring-slate-300",
-          "overflow-hidden",
-          disabled &&
-            "bg-slate-50 text-slate-400 cursor-not-allowed shadow-none"
-        )}
-      >
-        {/* Country code block */}
-        <div
-          className={cn(
-            "flex items-center px-3 text-sm border-r bg-slate-50 text-slate-700",
-            "border-slate-200"
-          )}
-        >
-          +91
-        </div>
+    <Controller
+      name={name}
+      control={control}
+      render={({ field, fieldState }) => {
+        const errorMessage = fieldState.error?.message?.toString();
+        const hasError = Boolean(errorMessage);
 
-        {/* Phone number input */}
-        <input
-          id={name}
-          ref={ref}
-          type="tel"
-          inputMode="numeric"
-          autoComplete="tel"
-          aria-invalid={hasError || undefined}
-          className={cn(
-            "flex-1 border-none bg-transparent px-3 py-2 text-sm text-slate-900 outline-none",
-            disabled && "cursor-not-allowed"
-          )}
-          value={displayValue}
-          onChange={handleChange}
-          onBlur={onBlur}
-          disabled={disabled}
-          placeholder={placeholder}
-        />
-      </div>
-    </FormField>
+        // Underlying form value is just digits, or empty string
+        const rawValue = (field.value as string | undefined) ?? "";
+
+        // Clamp + format for UI
+        const clampedDigits = rawValue.slice(0, maxDigits);
+        const displayValue = formatDigits(clampedDigits);
+
+        const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+          const digits = e.target.value.replace(/\D/g, "").slice(0, maxDigits);
+          field.onChange(digits); // this is what RHF + Zod see
+        };
+
+        return (
+          <FormField
+            label={label}
+            htmlFor={name}
+            error={errorMessage}
+            className={containerClassName}
+          >
+            <div className="flex gap-2">
+              {/* Country code pill */}
+              <div className="mt-1 flex items-center rounded-lg border border-slate-200 bg-slate-50 px-3 text-xs font-medium text-slate-600">
+                {countryCodePrefix}
+              </div>
+
+              {/* Phone input */}
+              <Input
+                id={name}
+                data-field={name}
+                name={field.name}
+                ref={field.ref}
+                aria-invalid={hasError || undefined}
+                value={displayValue}
+                onChange={handleChange}
+                onBlur={field.onBlur}
+                disabled={disabled}
+                inputMode="numeric"
+                placeholder={placeholder}
+                className={cn(
+                  "mt-1 flex-1 text-sm",
+                  hasError &&
+                    "border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-200",
+                  disabled &&
+                    "bg-slate-50 text-slate-400 cursor-not-allowed shadow-none"
+                )}
+              />
+            </div>
+          </FormField>
+        );
+      }}
+    />
   );
 }

@@ -3,7 +3,10 @@
 import { useEffect, useState } from "react";
 import { useFormContext, type FieldPath } from "react-hook-form";
 
-import type { IndiaOnboardingFormValues } from "../indiaFormSchema";
+import type {
+  IndiaOnboardingFormValues,
+  IndiaOnboardingFormInput,
+} from "../indiaFormSchema";
 import type { TOnboardingContext } from "@/types/onboarding.types";
 import { EGender } from "@/types/onboarding.types";
 
@@ -17,7 +20,7 @@ import { cn } from "@/lib/utils/cn";
 /**
  * Field paths for this section – used for section-level validation.
  */
-export const PERSONAL_INFO_FIELD_PATHS: FieldPath<IndiaOnboardingFormValues>[] =
+export const PERSONAL_INFO_FIELD_PATHS: FieldPath<IndiaOnboardingFormInput>[] =
   [
     "personalInfo.firstName",
     "personalInfo.lastName",

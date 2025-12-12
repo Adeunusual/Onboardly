@@ -49,18 +49,30 @@ const personalInfoSchema = z.object({
     fromDate: z.string().min(1, "From date is required."),
     toDate: z.string().min(1, "Until date is required."),
   }),
-  phoneHome: z.string().optional(),
+  phoneHome: z
+    .string()
+    .optional()
+    .refine(
+      (val) => !val || /^\d{10}$/.test(val),
+      "Enter a valid 10-digit phone number."
+    ),
+
   phoneMobile: z
     .string()
     .min(1, "Mobile number is required.")
-    .max(32, "Mobile number is too long."),
+    .regex(/^\d{10}$/, {
+      message: "Enter a valid 10-digit mobile number.",
+    }),
+
   emergencyContactName: z
     .string()
     .min(1, "Emergency contact name is required."),
   emergencyContactNumber: z
     .string()
     .min(1, "Emergency contact number is required.")
-    .max(32, "Emergency contact number is too long."),
+    .regex(/^\d{10}$/, {
+      message: "Enter a valid 10-digit emergency contact number.",
+    }),
 });
 
 /* ------------------------------------------------------------------ */
@@ -119,26 +131,51 @@ const indiaGovernmentIdsSchema = z.object({
 /* ------------------------------------------------------------------ */
 
 const educationEntrySchemaBase = z.object({
-  highestLevel: z.nativeEnum(EEducationLevel),
+  highestLevel: z
+    .nativeEnum(EEducationLevel)
+    .or(z.literal("")) // allow empty string from <select>
+    .refine((val) => Object.values(EEducationLevel).includes(val as any), {
+      message: "Please select your highest level of education.",
+    }),
 
   // Primary
   schoolName: z.string().optional(),
   schoolLocation: z.string().optional(),
-  primaryYearCompleted: z.number().int().optional(),
+  primaryYearCompleted: z
+    .number()
+    .int()
+    .min(1900, "Enter a valid 4-digit year.")
+    .max(2100, "Enter a valid 4-digit year.")
+    .optional(),
 
   // High school
   highSchoolInstitutionName: z.string().optional(),
   highSchoolBoard: z.string().optional(),
   highSchoolStream: z.string().optional(),
-  highSchoolYearCompleted: z.number().int().optional(),
+  highSchoolYearCompleted: z
+    .number()
+    .int()
+    .min(1900, "Enter a valid 4-digit year.")
+    .max(2100, "Enter a valid 4-digit year.")
+    .optional(),
   highSchoolGradeOrPercentage: z.string().optional(),
 
   // Diploma / Bachelor / Master / PhD / Other
   institutionName: z.string().optional(),
   universityOrBoard: z.string().optional(),
   fieldOfStudy: z.string().optional(),
-  startYear: z.number().int().optional(),
-  endYear: z.number().int().optional(),
+  startYear: z
+    .number()
+    .int()
+    .min(1900, "Enter a valid 4-digit year.")
+    .max(2100, "Enter a valid 4-digit year.")
+    .optional(),
+  endYear: z
+    .number()
+    .int()
+    .min(1900, "Enter a valid 4-digit year.")
+    .max(2100, "Enter a valid 4-digit year.")
+    .optional(),
   gradeOrCgpa: z.string().optional(),
 });
 
@@ -271,12 +308,26 @@ export const indiaOnboardingFormSchema = z
     personalInfo: personalInfoSchema,
     governmentIds: indiaGovernmentIdsSchema,
     education: educationArraySchema,
-    hasPreviousEmployment: z.boolean(),
+
+    hasPreviousEmployment: z
+      .preprocess((val) => {
+        if (val === "" || val == null) return undefined;
+        if (val === "true") return true;
+        if (val === "false") return false;
+        return val;
+      }, z.boolean().optional())
+      .refine((v) => typeof v === "boolean", {
+        message: "A selection is required.",
+      })
+      .transform((v) => v as boolean),
+
     employmentHistory: employmentHistoryArraySchema,
     bankDetails: indiaBankDetailsSchema,
     declaration: declarationSchema,
   })
   .superRefine((data, ctx) => {
+    // We cannot detect "unset" after transform because it becomes false,
+    // so we validate earlier via raw field state in UI.
     if (data.hasPreviousEmployment && data.employmentHistory.length === 0) {
       ctx.addIssue({
         path: ["employmentHistory"],
@@ -291,7 +342,10 @@ export const indiaOnboardingFormSchema = z
  * Strongly-typed form values used in React Hook Form.
  * Shape is intentionally aligned with IIndiaOnboardingFormData.
  */
-export type IndiaOnboardingFormValues = z.infer<
+export type IndiaOnboardingFormInput = z.input<
+  typeof indiaOnboardingFormSchema
+>;
+export type IndiaOnboardingFormValues = z.output<
   typeof indiaOnboardingFormSchema
 >;
 
