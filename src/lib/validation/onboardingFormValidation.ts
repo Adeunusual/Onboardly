@@ -10,10 +10,25 @@
  *    touching S3 / DB.
  */
 
-import { EAccountType, EEducationLevel, EGender, type IIndiaOnboardingFormData, type ICanadaOnboardingFormData, type IUsOnboardingFormData } from "@/types/onboarding.types";
+import {
+  EAccountType,
+  EEducationLevel,
+  EGender,
+  type IIndiaOnboardingFormData,
+  type ICanadaOnboardingFormData,
+  type IUsOnboardingFormData,
+} from "@/types/onboarding.types";
 
 import type { IFileAsset } from "@/types/shared.types";
-import { vAssert, isObj, vString, vBoolean, vNumber, vOneOf, vFileish } from "./validationHelpers";
+import {
+  vAssert,
+  isObj,
+  vString,
+  vBoolean,
+  vNumber,
+  vOneOf,
+  vFileish,
+} from "./validationHelpers";
 
 /* ──────────────────────── generic helpers ──────────────────────── */
 
@@ -50,7 +65,10 @@ function vFileAsset(asset: any, label: string) {
 /** For simple optional string fields (non-empty only when present). */
 function vOptionalString(value: any, label: string) {
   if (value == null) return;
-  vAssert(typeof value === "string" && value.trim().length > 0, `${label} must be a non-empty string when provided`);
+  vAssert(
+    typeof value === "string" && value.trim().length > 0,
+    `${label} must be a non-empty string when provided`
+  );
 }
 
 /** Simple MIME check for enforcing image-only files (e.g. signature). */
@@ -70,10 +88,17 @@ function validatePersonalInfo(personalInfo: any) {
   vString(personalInfo.lastName, "personalInfo.lastName");
   vString(personalInfo.email, "personalInfo.email");
 
-  vOneOf(personalInfo.gender, "personalInfo.gender", Object.values(EGender) as readonly string[]);
+  vOneOf(
+    personalInfo.gender,
+    "personalInfo.gender",
+    Object.values(EGender) as readonly string[]
+  );
 
   vDate(personalInfo.dateOfBirth, "personalInfo.dateOfBirth");
-  vBoolean(personalInfo.canProvideProofOfAge, "personalInfo.canProvideProofOfAge");
+  vBoolean(
+    personalInfo.canProvideProofOfAge,
+    "personalInfo.canProvideProofOfAge"
+  );
 
   // residentialAddress subset – keep it simple and aligned with schema
   const addr = personalInfo.residentialAddress;
@@ -81,7 +106,10 @@ function validatePersonalInfo(personalInfo: any) {
   vString(addr.addressLine1, "personalInfo.residentialAddress.addressLine1");
   vOptionalString(addr.city, "personalInfo.residentialAddress.city");
   vOptionalString(addr.state, "personalInfo.residentialAddress.state");
-  vOptionalString(addr.postalCode, "personalInfo.residentialAddress.postalCode");
+  vOptionalString(
+    addr.postalCode,
+    "personalInfo.residentialAddress.postalCode"
+  );
 
   vDate(addr.fromDate, "personalInfo.residentialAddress.fromDate");
   vDate(addr.toDate, "personalInfo.residentialAddress.toDate");
@@ -89,18 +117,31 @@ function validatePersonalInfo(personalInfo: any) {
   // phone & emergency contact
   vOptionalString(personalInfo.phoneHome, "personalInfo.phoneHome");
   vString(personalInfo.phoneMobile, "personalInfo.phoneMobile");
-  vString(personalInfo.emergencyContactName, "personalInfo.emergencyContactName");
-  vString(personalInfo.emergencyContactNumber, "personalInfo.emergencyContactNumber");
+  vString(
+    personalInfo.emergencyContactName,
+    "personalInfo.emergencyContactName"
+  );
+  vString(
+    personalInfo.emergencyContactNumber,
+    "personalInfo.emergencyContactNumber"
+  );
 }
 
 function validateEducationEntry(entry: any, label: string) {
   vAssert(isObj(entry), `${label} is required`);
 
   const level = entry.highestLevel;
-  vOneOf(level, `${label}.highestLevel`, Object.values(EEducationLevel) as readonly string[]);
+  vOneOf(
+    level,
+    `${label}.highestLevel`,
+    Object.values(EEducationLevel) as readonly string[]
+  );
 
   const disallow = (value: any, fieldPath: string) => {
-    vAssert(value == null, `${fieldPath} is not allowed when ${label}.highestLevel is ${level}`);
+    vAssert(
+      value == null,
+      `${fieldPath} is not allowed when ${label}.highestLevel is ${level}`
+    );
   };
 
   if (level === EEducationLevel.PRIMARY_SCHOOL) {
@@ -110,11 +151,17 @@ function validateEducationEntry(entry: any, label: string) {
     vNumber(entry.primaryYearCompleted, `${label}.primaryYearCompleted`);
 
     // Disallow high-school and diploma/bachelor+ fields
-    disallow(entry.highSchoolInstitutionName, `${label}.highSchoolInstitutionName`);
+    disallow(
+      entry.highSchoolInstitutionName,
+      `${label}.highSchoolInstitutionName`
+    );
     disallow(entry.highSchoolBoard, `${label}.highSchoolBoard`);
     disallow(entry.highSchoolStream, `${label}.highSchoolStream`);
     disallow(entry.highSchoolYearCompleted, `${label}.highSchoolYearCompleted`);
-    disallow(entry.highSchoolGradeOrPercentage, `${label}.highSchoolGradeOrPercentage`);
+    disallow(
+      entry.highSchoolGradeOrPercentage,
+      `${label}.highSchoolGradeOrPercentage`
+    );
 
     disallow(entry.institutionName, `${label}.institutionName`);
     disallow(entry.universityOrBoard, `${label}.universityOrBoard`);
@@ -124,11 +171,17 @@ function validateEducationEntry(entry: any, label: string) {
     disallow(entry.gradeOrCgpa, `${label}.gradeOrCgpa`);
   } else if (level === EEducationLevel.HIGH_SCHOOL) {
     // High school
-    vString(entry.highSchoolInstitutionName, `${label}.highSchoolInstitutionName`);
+    vString(
+      entry.highSchoolInstitutionName,
+      `${label}.highSchoolInstitutionName`
+    );
     vOptionalString(entry.highSchoolBoard, `${label}.highSchoolBoard`);
     vOptionalString(entry.highSchoolStream, `${label}.highSchoolStream`);
     vNumber(entry.highSchoolYearCompleted, `${label}.highSchoolYearCompleted`);
-    vOptionalString(entry.highSchoolGradeOrPercentage, `${label}.highSchoolGradeOrPercentage`);
+    vOptionalString(
+      entry.highSchoolGradeOrPercentage,
+      `${label}.highSchoolGradeOrPercentage`
+    );
 
     // Disallow primary and diploma/bachelor+ fields
     disallow(entry.schoolName, `${label}.schoolName`);
@@ -165,11 +218,17 @@ function validateEducationEntry(entry: any, label: string) {
     disallow(entry.schoolLocation, `${label}.schoolLocation`);
     disallow(entry.primaryYearCompleted, `${label}.primaryYearCompleted`);
 
-    disallow(entry.highSchoolInstitutionName, `${label}.highSchoolInstitutionName`);
+    disallow(
+      entry.highSchoolInstitutionName,
+      `${label}.highSchoolInstitutionName`
+    );
     disallow(entry.highSchoolBoard, `${label}.highSchoolBoard`);
     disallow(entry.highSchoolStream, `${label}.highSchoolStream`);
     disallow(entry.highSchoolYearCompleted, `${label}.highSchoolYearCompleted`);
-    disallow(entry.highSchoolGradeOrPercentage, `${label}.highSchoolGradeOrPercentage`);
+    disallow(
+      entry.highSchoolGradeOrPercentage,
+      `${label}.highSchoolGradeOrPercentage`
+    );
   }
 }
 
@@ -193,29 +252,53 @@ function validateEmploymentHistoryEntry(entry: any, label: string) {
   vString(entry.reasonForLeaving, `${label}.reasonForLeaving`);
 
   if (entry.experienceCertificateFile != null) {
-    vFileAsset(entry.experienceCertificateFile, `${label}.experienceCertificateFile`);
+    vFileAsset(
+      entry.experienceCertificateFile,
+      `${label}.experienceCertificateFile`
+    );
   }
 }
 
-function validateEmploymentHistoryArray(employmentHistory: any, opts: { requireAtLeastOne: boolean }) {
-  vAssert(Array.isArray(employmentHistory), "employmentHistory must be an array");
+function validateEmploymentHistoryArray(
+  employmentHistory: any,
+  opts: { requireAtLeastOne: boolean }
+) {
+  vAssert(
+    Array.isArray(employmentHistory),
+    "employmentHistory must be an array"
+  );
 
   if (opts.requireAtLeastOne) {
-    vAssert(employmentHistory.length > 0, "At least one employment history entry is required");
+    vAssert(
+      employmentHistory.length > 0,
+      "At least one employment history entry is required"
+    );
   }
 
-  vAssert(employmentHistory.length <= 3, "You can only enter up to 3 employment history entries");
+  vAssert(
+    employmentHistory.length <= 3,
+    "You can only enter up to 3 employment history entries"
+  );
 
   for (let i = 0; i < employmentHistory.length; i++) {
-    validateEmploymentHistoryEntry(employmentHistory[i], `employmentHistory[${i}]`);
+    validateEmploymentHistoryEntry(
+      employmentHistory[i],
+      `employmentHistory[${i}]`
+    );
   }
 }
 
 function validateDeclaration(declaration: any) {
   vAssert(isObj(declaration), "declaration is required");
 
-  vBoolean(declaration.hasAcceptedDeclaration, "declaration.hasAcceptedDeclaration");
-  vAssert(declaration.hasAcceptedDeclaration === true, "You must accept the declaration before submitting");
+  vBoolean(
+    declaration.hasAcceptedDeclaration,
+    "declaration.hasAcceptedDeclaration"
+  );
+  vAssert(
+    declaration.hasAcceptedDeclaration === true,
+    "You must accept the declaration before submitting"
+  );
 
   const sig = declaration.signature;
   vAssert(isObj(sig), "declaration.signature is required");
@@ -272,7 +355,7 @@ function validateIndiaBankDetails(bank: any) {
 
   const voidCheque = bank.voidCheque;
   if (voidCheque) {
-    vFileAsset(voidCheque.file, "bankDetails.voidCheque.file");
+    vFileAsset(voidCheque, "bankDetails.voidCheque");
   }
 }
 
@@ -280,7 +363,9 @@ function validateIndiaBankDetails(bank: any) {
  * Validate an India onboarding form payload.
  * Throws AppError(400, ...) with user-friendly messages on failure.
  */
-export function validateIndiaOnboardingForm(data: any): asserts data is IIndiaOnboardingFormData {
+export function validateIndiaOnboardingForm(
+  data: any
+): asserts data is IIndiaOnboardingFormData {
   vAssert(isObj(data), "indiaFormData is required");
 
   validatePersonalInfo(data.personalInfo);
@@ -359,7 +444,9 @@ function validateCanadaBankDetails(bank: any) {
 /**
  * Validate a Canada onboarding form payload.
  */
-export function validateCanadaOnboardingForm(data: any): asserts data is ICanadaOnboardingFormData {
+export function validateCanadaOnboardingForm(
+  data: any
+): asserts data is ICanadaOnboardingFormData {
   vAssert(isObj(data), "canadaFormData is required");
 
   validatePersonalInfo(data.personalInfo);
@@ -426,7 +513,11 @@ function validateUsBankDetails(bank: any) {
   vString(bank.accountNumber, "bankDetails.accountNumber");
   vString(bank.accountHolderName, "bankDetails.accountHolderName");
 
-  vOneOf(bank.accountType, "bankDetails.accountType", Object.values(EAccountType) as readonly string[]);
+  vOneOf(
+    bank.accountType,
+    "bankDetails.accountType",
+    Object.values(EAccountType) as readonly string[]
+  );
 
   const doc = bank.voidChequeOrDepositSlip;
   if (doc) {
@@ -437,7 +528,9 @@ function validateUsBankDetails(bank: any) {
 /**
  * Validate a US onboarding form payload.
  */
-export function validateUsOnboardingForm(data: any): asserts data is IUsOnboardingFormData {
+export function validateUsOnboardingForm(
+  data: any
+): asserts data is IUsOnboardingFormData {
   vAssert(isObj(data), "usFormData is required");
 
   validatePersonalInfo(data.personalInfo);

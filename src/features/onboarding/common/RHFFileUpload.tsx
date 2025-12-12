@@ -94,7 +94,16 @@ export function RHFFileUpload<TForm extends FieldValues>({
               maxSizeMB,
             });
 
-            field.onChange(uploaded as any);
+            const asset: IFileAsset = {
+              s3Key: uploaded.s3Key,
+              url: uploaded.url,
+              mimeType: uploaded.mimeType as any,
+              sizeBytes: uploaded.sizeBytes,
+              originalName: uploaded.originalName,
+            };
+
+            field.onChange(asset as any);
+
             setStatus("idle");
             setMessage("Upload successful.");
           } catch (err: any) {
@@ -111,12 +120,12 @@ export function RHFFileUpload<TForm extends FieldValues>({
 
           try {
             await deleteTempFile(asset);
+            field.onChange(undefined as any);
+            setStatus("idle");
+            setMessage("Document removed.");
           } catch (err: any) {
             setStatus("error");
             setMessage(err?.message || "Could not delete temp file.");
-          } finally {
-            field.onChange(null as any);
-            setStatus("idle");
           }
         }
 

@@ -270,9 +270,25 @@ const indiaBankDetailsSchema = z.object({
   bankName: z.string().min(1, "Bank name is required."),
   branchName: z.string().min(1, "Branch name is required."),
   accountHolderName: z.string().min(1, "Account holder name is required."),
-  accountNumber: z.string().min(1, "Account number is required."),
-  ifscCode: z.string().min(1, "IFSC code is required."),
-  upiId: z.string().optional(),
+  accountNumber: z
+    .string()
+    .min(1, "Account number is required.")
+    .regex(/^\d{6,18}$/, { message: "Enter a valid account number." }),
+  ifscCode: z
+    .string()
+    .min(1, "IFSC code is required.")
+    .regex(/^[A-Z]{4}0[A-Z0-9]{6}$/i, {
+      message: "Enter a valid IFSC code (e.g. HDFC0001234).",
+    })
+    .transform((v) => v.toUpperCase()),
+  upiId: z
+    .string()
+    .optional()
+    .refine((v) => !v || /^[a-z0-9.\-_]{2,256}@[a-z0-9.\-_]{2,64}$/i.test(v), {
+      message: "Enter a valid UPI ID (e.g. name@bank).",
+    }),
+
+  // optional, no errors when empty
   voidCheque: fileAssetSchema.optional(),
 });
 

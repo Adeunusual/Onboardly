@@ -27,6 +27,7 @@ import {
   EDUCATION_FIELD_PATHS,
 } from "./sections/EducationSection";
 import { EmploymentSection } from "./sections/EmploymentSection";
+import { BankDetailsSection } from "./sections/BankDetailsSection";
 
 import { getErrorAtPath } from "../common/getErrorAtPath";
 
@@ -49,7 +50,7 @@ const STEP_FIELD_MAP: Record<StepId, FieldPath<IndiaOnboardingFormInput>[]> = {
   personal: PERSONAL_INFO_FIELD_PATHS,
   education: EDUCATION_FIELD_PATHS,
   employment: ["hasPreviousEmployment", "employmentHistory"],
-  banking: [],
+  banking: ["bankDetails"],
   declaration: [],
   review: [],
 };
@@ -272,9 +273,7 @@ export function IndiaOnboardingForm({
           aria-label="Bank & payment details"
         >
           {currentIndex >= 3 && (
-            <PlaceholderSection title="Bank & payment details">
-              Bank details section will be implemented next.
-            </PlaceholderSection>
+            <BankDetailsSection isReadOnly={isReadOnly} docId={onboarding.id} />
           )}
         </section>
 
@@ -374,7 +373,15 @@ function buildDefaultValuesFromOnboarding(
     },
     education: [],
     employmentHistory: [],
-    // bankDetails / declaration will be filled as we implement those sections
+    bankDetails: {
+      bankName: "",
+      branchName: "",
+      accountHolderName: "",
+      accountNumber: "",
+      ifscCode: "",
+      upiId: "",
+      voidCheque: undefined,
+    },
   };
 }
 
