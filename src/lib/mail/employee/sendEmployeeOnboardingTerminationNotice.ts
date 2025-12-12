@@ -16,12 +16,11 @@ export type SendEmployeeOnboardingTerminationNoticeParams = {
 };
 
 export async function sendEmployeeOnboardingTerminationNotice(params: SendEmployeeOnboardingTerminationNoticeParams): Promise<void> {
-  const { to, firstName, lastName, subsidiary, baseUrl, terminationType, terminationReason } = params;
+  const { to, firstName, lastName, subsidiary, terminationType, terminationReason } = params;
 
   const fullName = `${firstName} ${lastName}`.trim();
   const escapedName = escapeHtml(fullName || "there");
   const escapedSubsidiary = escapeHtml(subsidiary);
-  const escapedBaseUrl = escapeHtml(baseUrl);
   const escapedTerminationType = escapeHtml(terminationType);
   const escapedReason = terminationReason ? escapeHtml(terminationReason).replace(/\r?\n/g, "<br/>") : undefined;
 
@@ -47,25 +46,6 @@ export async function sendEmployeeOnboardingTerminationNotice(params: SendEmploy
     <p style="margin:0 0 16px 0;">
       If you have any questions or believe this status is in error, please contact HR.
     </p>
-    <table role="presentation" cellspacing="0" cellpadding="0" style="margin:16px 0 24px 0;">
-      <tr>
-        <td>
-          <a href="${escapedBaseUrl}"
-            style="
-              display:inline-block;
-              padding:10px 18px;
-              font-size:14px;
-              font-weight:500;
-              text-decoration:none;
-              border-radius:9999px;
-              background-color:#6b7280;
-              color:#ffffff;
-            ">
-            Visit NPT site
-          </a>
-        </td>
-      </tr>
-    </table>
     <p style="margin:0 0 4px 0;">Thank you,</p>
     <p style="margin:0 0 24px 0;">NPT HR</p>
   `;

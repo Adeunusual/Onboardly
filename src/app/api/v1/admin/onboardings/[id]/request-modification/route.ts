@@ -121,9 +121,7 @@ export const POST = async (req: NextRequest, { params }: { params: Promise<{ id:
     });
 
     return successResponse(200, "Modification requested", {
-      onboardingId: onboarding._id.toString(),
-      status: onboarding.status,
-      inviteExpiresAt: onboarding.invite?.expiresAt,
+      onboarding: onboarding.toObject(),
     });
   } catch (error) {
     return errorResponse(error);

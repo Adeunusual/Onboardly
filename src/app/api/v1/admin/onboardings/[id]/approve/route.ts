@@ -84,6 +84,7 @@ export const POST = async (req: NextRequest, { params }: { params: Promise<{ id:
 
     // Ensure completion flags are consistent
     onboarding.isFormComplete = true;
+    onboarding.isCompleted = true;
     if (!onboarding.completedAt) {
       onboarding.completedAt = now;
     }
@@ -131,9 +132,7 @@ export const POST = async (req: NextRequest, { params }: { params: Promise<{ id:
     });
 
     return successResponse(200, "Onboarding approved", {
-      onboardingId: onboarding._id.toString(),
-      status: onboarding.status,
-      employeeNumber: onboarding.employeeNumber,
+      onboarding: onboarding.toObject(),
     });
   } catch (error) {
     return errorResponse(error);

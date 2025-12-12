@@ -63,6 +63,7 @@ export const POST = async (req: NextRequest, { params }: { params: Promise<{ id:
     onboarding.terminationReason = terminationReason;
     onboarding.terminatedAt = now;
     onboarding.updatedAt = now;
+    onboarding.isCompleted = true; // Mark as completed upon termination
 
     // Digital: clear invite/otp to block future access
     if (onboarding.method === EOnboardingMethod.DIGITAL) {
@@ -107,10 +108,7 @@ export const POST = async (req: NextRequest, { params }: { params: Promise<{ id:
     });
 
     return successResponse(200, "Onboarding terminated", {
-      onboardingId: onboarding._id.toString(),
-      status: onboarding.status,
-      terminationType: onboarding.terminationType,
-      terminationReason: onboarding.terminationReason,
+      onboarding: onboarding.toObject(),
     });
   } catch (error) {
     return errorResponse(error);

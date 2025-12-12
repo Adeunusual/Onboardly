@@ -37,8 +37,7 @@ type PutBody = {
  * Any newly created final keys are pushed into `collector` for potential
  * cleanup on failure.
  *
- * NOTE: This mirrors the employee-side logic. If you want to DRY it up,
- * extract this helper into a shared util and reuse it in both routes.
+ * NOTE: This mirrors the employee-side logic.
  */
 async function finalizeIndiaOnboardingAssetsForAdmin(onboardingId: string, payload: IIndiaOnboardingFormData, collector: string[]): Promise<IIndiaOnboardingFormData> {
   const ns = ES3Namespace.ONBOARDINGS;
@@ -304,6 +303,116 @@ export const PUT = async (req: NextRequest, { params }: { params: Promise<{ id: 
       }
     }
 
+    return errorResponse(error);
+  }
+};
+
+/* -------------------------------------------------------------------------- */
+/* DELETE /api/v1/admin/onboardings/[id]                                      */
+/* -------------------------------------------------------------------------- */
+/**
+ * HR: Permanently delete a terminated onboarding.
+ *
+ * Rules:
+ * - ONLY terminated onboardings can be deleted. :contentReference[oaicite:3]{index=3} :contentReference[oaicite:4]{index=4}
+ * - This is meant to be used from the "Terminated" view's Delete action. :contentReference[oaicite:5]{index=5}
+ * - We delete:
+ *   1) All S3 assets referenced by the onboarding (best-effort; fails the request if S3 delete fails).
+ *   2) The onboarding document itself.
+ *   3) We also append an OnboardingAuditLog entry with action=DELETED before deletion. :contentReference[oaicite:6]{index=6}
+ *
+ * NOTE:
+ * - We intentionally KEEP existing audit logs for compliance/history (they reference onboardingId).
+ *   If you prefer to hard-delete logs too, add:
+ *     await OnboardingAuditLogModel.deleteMany({ onboardingId: onboarding._id })
+ *   after creating the DELETED audit entry (or skip creating it if you delete logs).
+ */
+
+function collectS3KeysDeep(input: any): string[] {
+  const out = new Set<string>();
+  const seen = new Set<any>();
+
+  const walk = (v: any) => {
+    if (!v || typeof v !== "object") return;
+    if (seen.has(v)) return;
+    seen.add(v);
+
+    // Common file asset shape: { s3Key, url, mimeType, ... }
+    if (typeof (v as any).s3Key === "string" && (v as any).s3Key.trim()) {
+      out.add((v as any).s3Key.trim());
+    }
+
+    if (Array.isArray(v)) {
+      for (const item of v) walk(item);
+      return;
+    }
+
+    for (const key of Object.keys(v)) walk((v as any)[key]);
+  };
+
+  walk(input);
+  return Array.from(out);
+}
+
+export const DELETE = async (_req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
+  try {
+    await connectDB();
+    const user = await guard(); // ensure HR / admin
+
+    const { id: onboardingId } = await params;
+
+    const onboarding = await OnboardingModel.findById(onboardingId);
+    if (!onboarding) {
+      return errorResponse(404, "Onboarding not found");
+    }
+
+    if (onboarding.status !== EOnboardingStatus.Terminated) {
+      return errorResponse(400, "Only terminated onboardings can be deleted");
+    }
+
+    // 1) Collect all S3 keys referenced anywhere on the onboarding doc
+    //    (covers indiaFormData + future canada/us + any other file asset fields)
+    const keys = collectS3KeysDeep(onboarding.toObject());
+
+    // 2) Delete S3 objects first (so we don't lose the references if delete fails)
+    if (keys.length) {
+      await deleteS3Objects(keys);
+    }
+
+    // 3) Write audit entry before deletion (so the "Deleted" action is captured) :contentReference[oaicite:7]{index=7}
+    await createOnboardingAuditLogSafe({
+      onboardingId: (onboarding as any)._id?.toString?.() ?? String(onboardingId),
+      action: EOnboardingAuditAction.DELETED,
+      actor: {
+        type: EOnboardingActor.HR,
+        id: user.id,
+        name: user.name,
+        email: user.email,
+      },
+      message: `Onboarding permanently deleted by ${user.name}.`,
+      metadata: {
+        statusAtDelete: onboarding.status,
+        subsidiary: onboarding.subsidiary,
+        method: onboarding.method,
+        deletedS3KeysCount: keys.length,
+        source: "ADMIN_DELETE",
+      },
+    });
+
+    // OPTIONAL: If you want to also delete audit logs, uncomment:
+    // import { OnboardingAuditLogModel } from "@/mongoose/models/OnboardingAuditLog";
+    // await OnboardingAuditLogModel.deleteMany({ onboardingId: onboarding._id });
+
+    // 4) Delete the onboarding document
+    await OnboardingModel.deleteOne({ _id: onboarding._id });
+
+    return successResponse(200, "Onboarding deleted", {
+      deleted: {
+        id: onboarding._id?.toString?.() ?? onboardingId,
+        deletedS3KeysCount: keys.length,
+      },
+    });
+  } catch (error) {
     return errorResponse(error);
   }
 };

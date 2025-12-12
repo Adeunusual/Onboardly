@@ -14,12 +14,11 @@ export type SendEmployeeOnboardingApprovedParams = {
 };
 
 export async function sendEmployeeOnboardingApproved(params: SendEmployeeOnboardingApprovedParams): Promise<void> {
-  const { to, firstName, lastName, subsidiary, baseUrl, employeeNumber } = params;
+  const { to, firstName, lastName, subsidiary, employeeNumber } = params;
 
   const fullName = `${firstName} ${lastName}`.trim();
   const escapedName = escapeHtml(fullName || "there");
   const escapedSubsidiary = escapeHtml(subsidiary);
-  const escapedBaseUrl = escapeHtml(baseUrl);
   const escapedEmployeeNumber = employeeNumber ? escapeHtml(employeeNumber) : undefined;
 
   const subject = "NPT Employee Onboarding – Approved";
@@ -43,25 +42,6 @@ export async function sendEmployeeOnboardingApproved(params: SendEmployeeOnboard
       HR will contact you shortly with your start date, orientation details,
       and any remaining next steps.
     </p>
-    <table role="presentation" cellspacing="0" cellpadding="0" style="margin:16px 0 24px 0;">
-      <tr>
-        <td>
-          <a href="${escapedBaseUrl}"
-            style="
-              display:inline-block;
-              padding:10px 18px;
-              font-size:14px;
-              font-weight:500;
-              text-decoration:none;
-              border-radius:9999px;
-              background-color:#2563eb;
-              color:#ffffff;
-            ">
-            Visit NPT portal
-          </a>
-        </td>
-      </tr>
-    </table>
     <p style="margin:0 0 4px 0;">Thank you,</p>
     <p style="margin:0 0 24px 0;">NPT HR</p>
   `;
