@@ -17,8 +17,8 @@ type RHFSelectProps = React.SelectHTMLAttributes<HTMLSelectElement> & {
 export function RHFSelect({
   name,
   label,
-  containerClassName,
   className,
+  containerClassName,
   children,
   ...rest
 }: RHFSelectProps) {
@@ -27,14 +27,13 @@ export function RHFSelect({
     formState: { errors },
   } = useFormContext<IndiaOnboardingFormValues>();
 
-  const fieldError = getErrorAtPath(errors, name);
-  const errorMessage = fieldError?.message?.toString();
+  const error = getErrorAtPath(errors, name);
 
   return (
     <FormField
       label={label}
       htmlFor={name}
-      error={errorMessage}
+      error={error?.message}
       className={containerClassName}
     >
       <select

@@ -166,12 +166,10 @@ export function IndiaOnboardingForm({
           }}
           aria-label="Personal information"
         >
-          {currentIndex === 0 && (
-            <PersonalInfoSection
-              onboarding={onboarding}
-              isReadOnly={isReadOnly}
-            />
-          )}
+          <PersonalInfoSection
+            onboarding={onboarding}
+            isReadOnly={isReadOnly}
+          />
         </section>
 
         {/* Step 2–6 placeholders – we’ll replace with real sections later */}
@@ -181,7 +179,7 @@ export function IndiaOnboardingForm({
           }}
           aria-label="Education"
         >
-          {currentIndex === 1 && (
+          {currentIndex >= 1 && (
             <PlaceholderSection title="Education">
               Education section will be implemented next.
             </PlaceholderSection>
@@ -194,7 +192,7 @@ export function IndiaOnboardingForm({
           }}
           aria-label="Employment history"
         >
-          {currentIndex === 2 && (
+          {currentIndex >= 2 && (
             <PlaceholderSection title="Employment history">
               Employment history section will be implemented next.
             </PlaceholderSection>
@@ -207,7 +205,7 @@ export function IndiaOnboardingForm({
           }}
           aria-label="Bank & payment details"
         >
-          {currentIndex === 3 && (
+          {currentIndex >= 3 && (
             <PlaceholderSection title="Bank & payment details">
               Bank details section will be implemented next.
             </PlaceholderSection>
@@ -220,7 +218,7 @@ export function IndiaOnboardingForm({
           }}
           aria-label="Declaration"
         >
-          {currentIndex === 4 && (
+          {currentIndex >= 4 && (
             <PlaceholderSection title="Declaration">
               Declaration section will be implemented next.
             </PlaceholderSection>
@@ -233,7 +231,7 @@ export function IndiaOnboardingForm({
           }}
           aria-label="Review & submit"
         >
-          {currentIndex === 5 && (
+          {currentIndex >= 5 && (
             <PlaceholderSection title="Review & submit">
               Review & submit step will be wired into the backend submission
               route.
