@@ -18,7 +18,7 @@ import { ESubsidiary } from "@/types/shared.types";
 import type { GraphAttachment } from "@/lib/mail/mailer";
 import { EOnboardingActor, EOnboardingAuditAction } from "@/types/onboardingAuditLog.types";
 
-import { parseBool, rx, parseIsoDate, inclusiveEndOfDay, parseEnumParam, parsePagination, parseSort, buildMeta } from "@/lib/utils/queryUtils";
+import { parseBool, parseIsoDate, inclusiveEndOfDay, parseEnumParam, parsePagination, parseSort, buildMeta } from "@/lib/utils/queryUtils";
 
 /* -------------------------------------------------------------------------- */
 /* Types                                                                      */
@@ -102,8 +102,79 @@ function mapOnboardingToListItem(o: TOnboarding): OnboardingListItem {
 }
 
 /* -------------------------------------------------------------------------- */
-/* GET /api/v1/admin/onboardings                                             */
-/* Rich search, filtering, sorting, pagination                               */
+/* GET /api/v1/admin/onboardings                                              */
+/*                                                                            */
+/* HR/Admin-only endpoint to list onboardings for a single subsidiary with     */
+/* rich search, filtering, sorting, and pagination.                            */
+/*                                                                            */
+/* IMPORTANT:                                                                  */
+/*  - Results are ALWAYS scoped to exactly one subsidiary (no cross-mixing).   */
+/*  - By default, TERMINATED onboardings are excluded from results.            */
+/*    To include them, explicitly request them via:                            */
+/*      - status=Terminated (or a list including Terminated), OR               */
+/*      - statusGroup=terminated                                               */
+/*                                                                            */
+/* Query params:                                                               */
+/*  - subsidiary (required): IN|CA|US                                          */
+/*  - q (optional): free-text search across firstName/lastName/email/          */
+/*    employeeNumber (case-insensitive regex)                                 */
+/*  - method (optional): digital|manual                                       */
+/*  - status (optional): comma-separated statuses (e.g. Submitted,Approved)    */
+/*  - statusGroup (optional): dashboard chip shortcut (ignored if status set)  */
+/*      pending | modificationRequested | pendingReview | approved | manual    */
+/*      terminated                                                            */
+/*  - hasEmployeeNumber (optional): true|false                                 */
+/*  - isCompleted (optional): true|false                                       */
+/*  - dateField (optional): created|submitted|approved|terminated|updated       */
+/*      (defaults to "created")                                                */
+/*  - from (optional): ISO date (inclusive lower bound), e.g. 2025-01-01       */
+/*  - to (optional): ISO date (inclusive upper bound), e.g. 2025-12-31         */
+/*      Note: "to" is treated as end-of-day (23:59:59.999) in server timezone. */
+/*  - sortBy (optional): one of                                                */
+/*      createdAt|updatedAt|submittedAt|approvedAt|terminatedAt|firstName|      */
+/*      lastName|email|status|employeeNumber                                   */
+/*      (defaults to createdAt)                                                */
+/*  - sortDir (optional): asc|desc (defaults to desc or as implemented by      */
+/*    parseSort)                                                               */
+/*  - page (optional): 1-based page number (default 1)                         */
+/*  - pageSize (optional): items per page (bounded by parsePagination max)     */
+/*                                                                            */
+/* Example (uses all params):                                                  */
+/*  GET /api/v1/admin/onboardings                                              */
+/*    ?subsidiary=IN                                                           */
+/*    &q=arjun                                                                 */
+/*    &method=digital                                                          */
+/*    &status=Submitted,Resubmitted,Approved                                   */
+/*    &hasEmployeeNumber=true                                                  */
+/*    &isCompleted=true                                                        */
+/*    &dateField=submitted                                                     */
+/*    &from=2025-01-01                                                         */
+/*    &to=2025-12-31                                                           */
+/*    &sortBy=updatedAt                                                        */
+/*    &sortDir=desc                                                            */
+/*    &page=1                                                                  */
+/*    &pageSize=25                                                             */
+/*                                                                            */
+/* Response (200):                                                             */
+/*  {                                                                          */
+/*    items: Array<{                                                           */
+/*      id: string; subsidiary; method; firstName; lastName; email; status;    */
+/*      employeeNumber?: string; isFormComplete: boolean; isCompleted: boolean;*/
+/*      modificationRequestedAt?: string|Date; terminationType?: string;       */
+/*      createdAt: string|Date; updatedAt: string|Date;                        */
+/*      submittedAt?: string|Date; approvedAt?: string|Date; terminatedAt?:    */
+/*      string|Date;                                                           */
+/*    }>,                                                                      */
+/*    meta: {                                                                  */
+/*      page: number; pageSize: number; total: number; pages: number;          */
+/*      sortBy: string; sortDir: "asc"|"desc";                                 */
+/*      filters: { ...echoed filters... }                                      */
+/*    }                                                                        */
+/*  }                                                                          */
+/*                                                                            */
+/* Error cases:                                                                */
+/*  - 400 if subsidiary is missing/invalid or query params invalid             */
+/*  - 401/403 if not authorized                                                */
 /* -------------------------------------------------------------------------- */
 
 export const GET = async (req: NextRequest) => {
@@ -188,16 +259,14 @@ export const GET = async (req: NextRequest) => {
 
     // ── Build Mongo filter
     const filter: any = {
-      subsidiary, // always scoped to one subsidiary :contentReference[oaicite:3]{index=3}
+      subsidiary, // always scoped to one subsidiary
     };
 
-    if (q && q.trim()) {
-      const pattern = rx(q.trim());
-      filter.$or = [{ firstName: pattern }, { lastName: pattern }, { email: pattern }, { employeeNumber: pattern }];
-    }
+    // Default: ignore terminated onboardings unless explicitly requested
+    const includeTerminated = (statuses?.includes(EOnboardingStatus.Terminated) ?? false) || sp.get("statusGroup") === "terminated";
 
-    if (method) {
-      filter.method = method;
+    if (!includeTerminated) {
+      filter.status = { $ne: EOnboardingStatus.Terminated };
     }
 
     if (statuses && statuses.length > 0) {
@@ -273,9 +342,57 @@ export const GET = async (req: NextRequest) => {
 };
 
 /* -------------------------------------------------------------------------- */
-/* POST /api/v1/admin/onboardings                                             */
-/* Existing: create onboarding + send invite/PDF                              */
+/* POST /api/v1/admin/onboardings                                              */
+/*                                                                            */
+/* HR/Admin-only endpoint to create a new onboarding record and send the       */
+/* initial employee email for either:                                          */
+/*  - DIGITAL onboarding: generates an expiring invite token (hashed in DB)    */
+/*    and emails a secure link to the employee.                                */
+/*  - MANUAL onboarding: creates a record and emails the blank country-specific*/
+/*    onboarding PDF template to the employee with instructions.               */
+/*                                                                            */
+/* Request body (JSON):                                                       */
+/*  {                                                                          */
+/*    subsidiary: "IN"|"CA"|"US",                                              */
+/*    method: "digital"|"manual",                                              */
+/*    firstName: string,                                                      */
+/*    lastName: string,                                                       */
+/*    email: string                                                           */
+/*  }                                                                          */
+/*                                                                            */
+/* Current constraint:                                                        */
+/*  - Only INDIA is supported right now; other subsidiaries return 400.        */
+/*                                                                            */
+/* Behavior:                                                                   */
+/*  - Rejects if an active onboarding already exists for (subsidiary,email)    */
+/*    where status != Terminated (409).                                        */
+/*  - Creates the onboarding with initial status:                               */
+/*      DIGITAL -> InviteGenerated                                             */
+/*      MANUAL  -> ManualPDFSent                                              */
+/*  - DIGITAL only:                                                           */
+/*      - Generates a random raw invite token                                  */
+/*      - Stores only token hash in DB                                         */
+/*      - Sends email containing the raw invite token/link                     */
+/*  - MANUAL only:                                                            */
+/*      - Reads the blank PDF template from assets and attaches it to email     */
+/*                                                                            */
+/* Reliability / rollback:                                                    */
+/*  - If email sending fails (or PDF read fails for manual), the created        */
+/*    onboarding is deleted (best-effort rollback) and the request fails.      */
+/*                                                                            */
+/* Response (201):                                                            */
+/*  {                                                                          */
+/*    onboarding: <onboarding object>                                          */
+/*  }                                                                          */
+/*  Note: onboarding is returned via toObject({ virtuals: true, getters: true })*/
+/*                                                                            */
+/* Error cases:                                                               */
+/*  - 400: missing fields / unsupported subsidiary / invalid method            */
+/*  - 401/403: not authorized                                                  */
+/*  - 409: duplicate active onboarding (same email + subsidiary)               */
+/*  - 500: unexpected failures (DB, email provider, file read, etc.)           */
 /* -------------------------------------------------------------------------- */
+
 export const POST = async (req: NextRequest) => {
   try {
     await connectDB();

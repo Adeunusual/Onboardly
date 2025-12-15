@@ -14,7 +14,22 @@ import { OnboardingModel } from "@/mongoose/models/Onboarding";
 import { EOnboardingMethod, EOnboardingStatus } from "@/types/onboarding.types";
 import { EOnboardingActor, EOnboardingAuditAction } from "@/types/onboardingAuditLog.types";
 
-/* -------------------- POST /admin/onboardings/[id]/resend-invite -------------------- */
+// -----------------------------------------------------------------------------
+// POST /api/v1/admin/onboardings/[id]/resend-invite
+//
+// Re-sends a digital onboarding invitation to an employee.
+//
+// Behavior:
+// - Allowed only for DIGITAL onboardings.
+// - Not allowed once onboarding is Approved or Terminated.
+// - Generates a new secure invite token and replaces the previous one
+//   (old links are immediately invalidated).
+// - Resets invite expiry and sends a fresh onboarding email to the employee.
+// - Records an INVITE_RESENT audit log entry attributed to the HR actor.
+//
+// Access:
+// - HR admin only (guarded).
+// -----------------------------------------------------------------------------
 export const POST = async (req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   try {
     await connectDB();

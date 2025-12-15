@@ -131,12 +131,22 @@ async function finalizeIndiaOnboardingAssets(onboardingId: string, payload: IInd
   return form;
 }
 
-/* -------------------------------------------------------------------------- */
-/* GET /api/v1/onboarding/[id]                                                  */
-/* -------------------------------------------------------------------------- */
-/**
- * Fetch sanitized onboarding context for the employee.
- */
+// -----------------------------------------------------------------------------
+// GET /api/v1/onboarding/[id]
+//
+// Returns a sanitized onboarding “context” for the employee UI.
+//
+// Access control (employee session):
+// - Requires a valid onboarding session cookie (raw invite token).
+// - Cookie token must hash-match `invite.tokenHash` for the SAME onboarding [id].
+// - Enforces: method = DIGITAL, invite exists + not expired.
+// - Denies access if onboarding is Approved or Terminated.
+// - Submitted/Resubmitted are allowed (read-only on the frontend by status).
+//
+// Response:
+// - Returns `onboardingContext` (derived from `createOnboardingContext`), not the
+//   raw onboarding document, to avoid leaking sensitive/internal fields.
+// -----------------------------------------------------------------------------
 export const GET = async (_req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   try {
     await connectDB();
