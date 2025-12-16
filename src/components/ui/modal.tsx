@@ -131,7 +131,7 @@ export function Modal({
       {open && (
         <motion.div
           key="modal-backdrop"
-          className="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm px-4 py-6"
+          className="fixed inset-0 z-40 flex items-center justify-center bg-[color:var(--app-overlay)] backdrop-blur-sm px-4 py-6"
           variants={overlayFade}
           initial="hidden"
           animate="visible"
@@ -150,7 +150,7 @@ export function Modal({
             ref={dialogRef}
             tabIndex={-1}
             className={cn(
-              "w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl",
+              "w-full max-w-sm rounded-2xl bg-[color:var(--app-modal-surface)] p-6 shadow-xl",
               className
             )}
             onClick={(e) => e.stopPropagation()}

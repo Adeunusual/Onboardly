@@ -66,6 +66,15 @@ export enum EAccountType {
  */
 export interface IOnboardingInvite {
   tokenHash: string;
+  /**
+   * Encrypted (AES-GCM) raw invite token, stored ONLY so HR can copy/view the
+   * current invite link from the dashboard without reissuing a new invite.
+   *
+   * Security:
+   * - Employee-facing APIs must never expose this field.
+   * - Admin-only APIs may decrypt it to build a copyable invite URL.
+   */
+  tokenEncrypted?: string;
   expiresAt: Date | string; // ISO date string
   lastSentAt: Date | string; // ISO date string
 }

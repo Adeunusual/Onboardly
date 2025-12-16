@@ -8,6 +8,7 @@ import { Schema } from "mongoose";
 const onboardingInviteSchema = new Schema<IOnboardingInvite>(
   {
     tokenHash: { type: String, required: true },
+    tokenEncrypted: { type: String, required: false },
     expiresAt: { type: Date, required: true },
     lastSentAt: { type: Date, required: true },
   },

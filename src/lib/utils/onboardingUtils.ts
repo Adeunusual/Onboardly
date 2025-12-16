@@ -5,6 +5,7 @@ import { AppError } from "@/types/api.types";
 import { EOnboardingMethod, EOnboardingStatus, IOnboardingInvite, TOnboardingContext, type TOnboarding } from "@/types/onboarding.types";
 import { EOnboardingActor, EOnboardingAuditAction } from "@/types/onboardingAuditLog.types";
 import { ESubsidiary } from "@/types/shared.types";
+import { encryptString } from "@/lib/utils/encryption";
 
 /**
  * True if an employee *should* be able to access /onboarding/[id]
@@ -60,6 +61,7 @@ export function buildOnboardingInvite(rawToken: string): IOnboardingInvite {
 
   return {
     tokenHash: rawToken, // will be replaced by hashed value in route
+    tokenEncrypted: encryptString(rawToken),
     expiresAt,
     lastSentAt: new Date(now),
   };

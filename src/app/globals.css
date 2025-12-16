@@ -22,6 +22,61 @@ body {
   height: 100%;
 }
 
+/* App-wide overlay + modal defaults (safe for all areas). */
+:root {
+  --app-overlay: rgba(15, 23, 42, 0.40);
+  --app-modal-surface: #ffffff;
+}
+
+/* ================================================================== */
+/* Dashboard Theme Tokens (HR area)                                    */
+/* ================================================================== */
+/**
+ * Dashboard is themed via a wrapper element:
+ *   <div class="dashboard-root" data-theme="light|dark">...</div>
+ *
+ * This avoids impacting the employee onboarding UI theme.
+ */
+.dashboard-root {
+  /* Light: white + slate + red */
+  --dash-bg: #f8fafc;
+  --dash-surface: #ffffff;
+  --dash-surface-2: #f1f5f9;
+  --dash-text: #0f172a;
+  --dash-muted: #475569;
+  --dash-border: rgba(15, 23, 42, 0.08);
+  --dash-shadow: 0 10px 26px rgba(15, 23, 42, 0.10);
+
+  --dash-red: #c31c20;
+  --dash-red-2: #e4494d;
+  --dash-red-soft: rgba(195, 28, 32, 0.10);
+
+  /* Make generic Modal component match dashboard automatically */
+  --app-overlay: rgba(2, 6, 23, 0.36);
+  --app-modal-surface: var(--dash-surface);
+
+  background: var(--dash-bg);
+  color: var(--dash-text);
+}
+
+.dashboard-root[data-theme="dark"] {
+  /* Dark: black + slate + red (clear elevation + readable surfaces) */
+  --dash-bg: #06070b;
+  --dash-surface: #0c1018;
+  --dash-surface-2: #121a26;
+  --dash-text: #e2e8f0;
+  --dash-muted: #9aa9be;
+  --dash-border: rgba(148, 163, 184, 0.16);
+  --dash-shadow: 0 14px 34px rgba(0, 0, 0, 0.62);
+
+  --dash-red: #ff3b3f;
+  --dash-red-2: #ff4d4f;
+  --dash-red-soft: rgba(255, 59, 63, 0.16);
+
+  --app-overlay: rgba(0, 0, 0, 0.62);
+  --app-modal-surface: var(--dash-surface);
+}
+
 /* ================================================================== */
 /* Hero Brand Pill Component                                          */
 /* ================================================================== */

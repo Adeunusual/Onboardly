@@ -19,6 +19,7 @@ import type { GraphAttachment } from "@/lib/mail/mailer";
 import { EOnboardingActor, EOnboardingAuditAction } from "@/types/onboardingAuditLog.types";
 
 import { parseBool, parseIsoDate, inclusiveEndOfDay, parseEnumParam, parsePagination, parseSort, buildMeta } from "@/lib/utils/queryUtils";
+import { decryptString } from "@/lib/utils/encryption";
 
 /* -------------------------------------------------------------------------- */
 /* Types                                                                      */
@@ -42,6 +43,10 @@ type OnboardingListItem = {
   email: string;
 
   status: EOnboardingStatus;
+
+  /** Present for DIGITAL onboardings only (so HR can copy the existing invite link). */
+  inviteUrl?: string;
+  inviteExpiresAt?: Date | string;
 
   employeeNumber?: string;
   isFormComplete: boolean;
@@ -74,7 +79,14 @@ type OnboardingListFilters = {
 /* Helper: Map TOnboarding → minimal admin list item                         */
 /* -------------------------------------------------------------------------- */
 
-function mapOnboardingToListItem(o: TOnboarding): OnboardingListItem {
+function mapOnboardingToListItem(o: TOnboarding, baseUrl: string): OnboardingListItem {
+  const inviteTokenEncrypted = (o as any).invite?.tokenEncrypted as string | undefined;
+  const inviteToken = inviteTokenEncrypted ? decryptString(inviteTokenEncrypted) : undefined;
+  const inviteUrl =
+    o.method === EOnboardingMethod.DIGITAL && inviteToken
+      ? `${baseUrl}/onboarding?token=${encodeURIComponent(inviteToken)}`
+      : undefined;
+
   return {
     id: (o as any)._id?.toString?.() ?? (o as any).id ?? "",
     subsidiary: o.subsidiary,
@@ -85,6 +97,9 @@ function mapOnboardingToListItem(o: TOnboarding): OnboardingListItem {
     email: o.email,
 
     status: o.status,
+
+    inviteUrl,
+    inviteExpiresAt: (o as any).invite?.expiresAt,
 
     employeeNumber: o.employeeNumber,
     isFormComplete: o.isFormComplete,
@@ -184,6 +199,7 @@ export const GET = async (req: NextRequest) => {
 
     const url = new URL(req.url);
     const sp = url.searchParams;
+    const baseUrl = url.origin;
 
     // ── Required: subsidiary context (no cross-mixing between IN/CA/US) :contentReference[oaicite:0]{index=0}
     const subsidiary = parseEnumParam(sp.get("subsidiary"), Object.values(ESubsidiary) as readonly ESubsidiary[], "subsidiary");
@@ -311,7 +327,7 @@ export const GET = async (req: NextRequest) => {
       .limit(limit)
       .lean()) as unknown as TOnboarding[];
 
-    const items = docs.map(mapOnboardingToListItem);
+    const items = docs.map((d) => mapOnboardingToListItem(d, baseUrl));
 
     const filters: OnboardingListFilters = {
       subsidiary,
