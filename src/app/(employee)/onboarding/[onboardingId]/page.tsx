@@ -11,7 +11,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 
 import { Navbar } from "@/components/layout/navbar";
 import { FormWizard } from "@/components/onboarding/form-wizard";
@@ -33,6 +33,8 @@ import { EEApiErrorType } from "@/types/api.types";
 import { IndiaOnboardingForm } from "@/features/onboarding/india/IndiaOnboardingForm";
 import { reverseGeocodeBestEffort } from "@/features/onboarding/form-engine/geo";
 
+import { SubmissionCompleteModal } from "./SubmissionCompleteModal";
+
 export default function OnboardingFormPage() {
   // ==================================================================
   // Route params (client-side)
@@ -40,6 +42,7 @@ export default function OnboardingFormPage() {
 
   const params = useParams<{ onboardingId: string }>();
   const onboardingId = params?.onboardingId;
+  const router = useRouter();
 
   // ==================================================================
   // Data loading state
@@ -48,6 +51,9 @@ export default function OnboardingFormPage() {
   const [onboarding, setOnboarding] = useState<TOnboardingContext | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+
+  // Completion modal (shown immediately after successful submit)
+  const [isCompletionOpen, setIsCompletionOpen] = useState(false);
 
   // ==================================================================
   // Geo (request IMMEDIATELY on page entry - required for submission)
@@ -130,6 +136,13 @@ export default function OnboardingFormPage() {
     status === EOnboardingStatus.Resubmitted ||
     status === EOnboardingStatus.Approved ||
     status === EOnboardingStatus.Terminated;
+
+  function handleCompletionAcknowledge() {
+    // Backend clears session on submit; we intentionally return the user
+    // to the onboarding entry screen afterwards.
+    setIsCompletionOpen(false);
+    router.replace("/onboarding");
+  }
 
   // ==================================================================
   // Fetch onboarding context when onboardingId is available
@@ -324,13 +337,26 @@ export default function OnboardingFormPage() {
                 isReadOnly={isReadOnly}
                 currentIndex={currentIndex}
                 onStepChange={setCurrentIndex}
-                onSubmitted={(ctx) => setOnboarding(ctx)}
+                onSubmitted={(ctx) => {
+                  setOnboarding(ctx);
+                  if (
+                    ctx.status === EOnboardingStatus.Submitted ||
+                    ctx.status === EOnboardingStatus.Resubmitted
+                  ) {
+                    setIsCompletionOpen(true);
+                  }
+                }}
                 geo={geo}
                 geoDenied={geoDenied}
               />
             )}
         </div>
       </main>
+
+      <SubmissionCompleteModal
+        open={isCompletionOpen}
+        onAcknowledge={handleCompletionAcknowledge}
+      />
     </div>
   );
 }

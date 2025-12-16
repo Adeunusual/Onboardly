@@ -175,7 +175,7 @@ export function EmploymentSection({
                       type="button"
                       onClick={() => remove(index)}
                       disabled={isReadOnly}
-                      className="text-xs font-medium text-slate-500 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-40"
+                      className="cursor-pointer text-xs font-medium text-slate-500 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-40"
                     >
                       Remove
                     </button>
@@ -262,7 +262,7 @@ export function EmploymentSection({
                 } as any)
               }
               disabled={isReadOnly || fields.length >= 3}
-              className="rounded-full border border-slate-300 px-4 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+              className="cursor-pointer rounded-full border border-slate-300 px-4 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
             >
               Add another role (max 3)
             </button>

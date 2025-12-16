@@ -7,7 +7,7 @@ import connectDB from "@/lib/utils/connectDB";
 import { OnboardingModel } from "@/mongoose/models/Onboarding";
 import { EOnboardingMethod, EOnboardingStatus, TOnboardingDoc, type TOnboarding } from "@/types/onboarding.types";
 import { AppError, EEApiErrorType } from "@/types/api.types";
-import { ONBOARDING_SESSION_COOKIE_NAME } from "@/config/env";
+import { isProd, ONBOARDING_SESSION_COOKIE_NAME } from "@/config/env";
 import { hashString } from "@/lib/utils/encryption";
 
 /**
@@ -17,14 +17,28 @@ import { hashString } from "@/lib/utils/encryption";
  * Max-Age is in seconds and should typically be (invite.expiresAt - now)/1000.
  */
 function buildSessionCookie(value: string, maxAgeSeconds: number): string {
-  const attrs = [`${ONBOARDING_SESSION_COOKIE_NAME}=${encodeURIComponent(value)}`, "Path=/", "HttpOnly", "SameSite=Lax", "Secure", `Max-Age=${Math.max(0, maxAgeSeconds)}`];
+  const attrs = [
+    `${ONBOARDING_SESSION_COOKIE_NAME}=${encodeURIComponent(value)}`,
+    "Path=/",
+    "HttpOnly",
+    "SameSite=Lax",
+    ...(isProd ? ["Secure"] : []),
+    `Max-Age=${Math.max(0, maxAgeSeconds)}`,
+  ];
 
   return attrs.join("; ");
 }
 
 /** Clear cookie helper (used when we know the cookie is stale/invalid). */
 export function clearOnboardingCookieHeader(): string {
-  const attrs = [`${ONBOARDING_SESSION_COOKIE_NAME}=;`, "Path=/", "HttpOnly", "SameSite=Lax", "Secure", "Max-Age=0"];
+  const attrs = [
+    `${ONBOARDING_SESSION_COOKIE_NAME}=;`,
+    "Path=/",
+    "HttpOnly",
+    "SameSite=Lax",
+    ...(isProd ? ["Secure"] : []),
+    "Max-Age=0",
+  ];
   return attrs.join("; ");
 }
 

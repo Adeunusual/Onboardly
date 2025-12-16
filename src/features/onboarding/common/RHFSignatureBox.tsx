@@ -219,7 +219,9 @@ export const RHFSignatureBox = React.forwardRef(function RHFSignatureBox<
   const clearCanvasOnly = React.useCallback(() => {
     try {
       canvasRef.current?.clear();
-    } catch {}
+    } catch {
+      // Best-effort: ignore canvas clear failures
+    }
     setHasCanvasInk(false);
     // ensure a clean remount if react-signature-canvas gets stuck
     setCanvasKey((k) => k + 1);
@@ -248,6 +250,7 @@ export const RHFSignatureBox = React.forwardRef(function RHFSignatureBox<
         try {
           lastDataUrlRef.current = sig.toDataURL("image/png");
         } catch {
+          // Best-effort: ignore export failures
           lastDataUrlRef.current = null;
         }
       } else {
@@ -282,7 +285,7 @@ export const RHFSignatureBox = React.forwardRef(function RHFSignatureBox<
       sig.fromDataURL(lastDataUrlRef.current);
       setHasCanvasInk(true);
     } catch {
-      // ignore
+      // Best-effort: ignore restore failures
     }
     lastDataUrlRef.current = null;
   }, [canvasSize.width, canvasSize.height]);
@@ -298,7 +301,9 @@ export const RHFSignatureBox = React.forwardRef(function RHFSignatureBox<
       // entering preview mode => clear canvas and reset ink state
       try {
         sig?.clear();
-      } catch {}
+      } catch {
+        // Best-effort: ignore canvas clear failures
+      }
       setHasCanvasInk(false);
       return;
     }
@@ -425,7 +430,9 @@ export const RHFSignatureBox = React.forwardRef(function RHFSignatureBox<
         if (currentAsset) {
           try {
             await deleteTempFile(currentAsset);
-          } catch {}
+          } catch {
+            // Best-effort: ignore temp file cleanup failures
+          }
         }
 
         onChange?.(nextAsset as any);
@@ -441,7 +448,9 @@ export const RHFSignatureBox = React.forwardRef(function RHFSignatureBox<
         setHasCanvasInk(false);
         try {
           canvasRef.current?.clear();
-        } catch {}
+        } catch {
+          // Best-effort: ignore canvas clear failures
+        }
         setCanvasKey((k) => k + 1);
         setSavedPulse((n) => n + 1);
 
@@ -483,7 +492,9 @@ export const RHFSignatureBox = React.forwardRef(function RHFSignatureBox<
         if (currentAsset) {
           try {
             await deleteTempFile(currentAsset);
-          } catch {}
+          } catch {
+            // Best-effort: ignore temp file cleanup failures
+          }
         }
 
         onChange?.(nextAsset as any);
@@ -497,7 +508,9 @@ export const RHFSignatureBox = React.forwardRef(function RHFSignatureBox<
         setHasCanvasInk(false);
         try {
           canvasRef.current?.clear();
-        } catch {}
+        } catch {
+          // Best-effort: ignore canvas clear failures
+        }
         setCanvasKey((k) => k + 1);
         setSavedPulse((n) => n + 1);
 

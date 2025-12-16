@@ -99,6 +99,7 @@ function TurnstileWidget({
     void render();
 
     return () => {
+      const hostEl = ref.current;
       // Best-effort cleanup to avoid multiple widgets leaking across navigations.
       try {
         // @ts-expect-error - provided by turnstile script
@@ -112,7 +113,7 @@ function TurnstileWidget({
         // ignore
       } finally {
         widgetIdRef.current = null;
-        if (ref.current) ref.current.innerHTML = "";
+        if (hostEl) hostEl.innerHTML = "";
       }
     };
   }, [disabled, onToken]);

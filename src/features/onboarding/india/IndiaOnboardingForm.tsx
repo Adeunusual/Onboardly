@@ -351,7 +351,7 @@ export function IndiaOnboardingForm({
         <div className="mt-4 flex items-center justify-between gap-3 text-sm">
           <button
             type="button"
-            className="rounded-full border border-slate-200 px-4 py-2 text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+            className="cursor-pointer rounded-full border border-slate-200 px-4 py-2 text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
             onClick={handlePrev}
             disabled={currentIndex === 0}
           >
@@ -362,7 +362,7 @@ export function IndiaOnboardingForm({
             {currentIndex < ONBOARDING_STEPS.length - 1 ? (
               <button
                 type="button"
-                className="rounded-full bg-slate-900 px-6 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
+                className="cursor-pointer rounded-full bg-slate-900 px-6 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
                 onClick={handleNext}
                 disabled={isReadOnly}
               >
@@ -371,7 +371,7 @@ export function IndiaOnboardingForm({
             ) : (
               <button
                 type="submit"
-                className="rounded-full bg-emerald-600 px-6 py-2 text-sm font-medium text-white shadow-sm hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-40"
+                className="cursor-pointer rounded-full bg-slate-900 px-6 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
                 disabled={isReadOnly || isSubmitting}
               >
                 {isSubmitting ? "Submitting..." : "Submit onboarding"}

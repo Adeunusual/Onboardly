@@ -17,6 +17,7 @@
  */
 
 import { OnboardingInviteScreen } from "./invite-screen";
+import { MissingTokenScreen } from "./MissingTokenScreen";
 
 /**
  * Search Parameters Promise Type
@@ -77,20 +78,7 @@ export default async function OnboardingEntryPage({
    * This protects against direct navigation without a valid invitation link
    */
   if (!inviteToken) {
-    return (
-      <main className="flex min-h-screen items-center justify-center px-4">
-        <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-sm">
-          <h1 className="text-xl font-semibold tracking-tight text-slate-900">
-            Invalid onboarding link
-          </h1>
-          <p className="mt-2 text-sm text-slate-600">
-            This link is missing a security token. Please open the onboarding
-            link directly from the email you received, or contact NPT HR for
-            help.
-          </p>
-        </div>
-      </main>
-    );
+    return <MissingTokenScreen />;
   }
 
   /**
