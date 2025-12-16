@@ -296,18 +296,22 @@ export function DataOperationsBar({
 
   const activeFilterCount = useMemo(() => {
     let n = 0;
+    if (searchDraft.trim()) n += 1;
     if (statusGroup) n += 1;
     if (hasEmployeeNumber) n += 1;
     if (from) n += 1;
     if (to) n += 1;
     if (dateField !== "created") n += 1;
     return n;
-  }, [statusGroup, hasEmployeeNumber, from, to, dateField]);
+  }, [searchDraft, statusGroup, hasEmployeeNumber, from, to, dateField]);
 
   function clearAll() {
+    onSearchDraft("");
     onUpdateQuery({
+      q: undefined,
       statusGroup: undefined,
       hasEmployeeNumber: undefined,
+      dateField: undefined,
       from: undefined,
       to: undefined,
     });
