@@ -267,10 +267,10 @@ export const POST = async (req: NextRequest, { params }: { params: Promise<{ id:
     indiaFormData.personalInfo.email = onboarding.email;
 
     // Validate indiaFormData
-    validateIndiaOnboardingForm(body.indiaFormData);
+    validateIndiaOnboardingForm(indiaFormData);
 
     // Finalize S3 assets in the India form payload
-    const finalizedIndiaFormData = await finalizeIndiaOnboardingAssets(onboarding._id?.toString?.() ?? onboardingId, body.indiaFormData, movedFinalKeys);
+    const finalizedIndiaFormData = await finalizeIndiaOnboardingAssets(onboarding._id?.toString?.() ?? onboardingId, indiaFormData, movedFinalKeys);
 
     // Transition status based on previous state
     let nextStatus: EOnboardingStatus;
