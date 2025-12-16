@@ -30,7 +30,7 @@ type RequestModificationBody = {
  * - method must be DIGITAL.
  * - status must NOT be Approved or Terminated.
  * - isFormComplete must be true (there is something to modify).
- * - Allowed only from Submitted / Resubmitted.
+ * - Allowed only from Submitted / Resubmitted / ModificationRequested.
  * - Generates a new invite and sets status = ModificationRequested.
  *
  * Reliability:
@@ -61,8 +61,8 @@ export const POST = async (req: NextRequest, { params }: { params: Promise<{ id:
       return errorResponse(400, "Cannot request modification until the onboarding form is fully completed");
     }
 
-    // Standard behavior: only allow from Submitted / Resubmitted
-    const allowed = onboarding.status === EOnboardingStatus.Submitted || onboarding.status === EOnboardingStatus.Resubmitted;
+    // Standard behavior: only allow from Submitted / Resubmitted / ModificationRequested
+    const allowed = onboarding.status === EOnboardingStatus.Submitted || onboarding.status === EOnboardingStatus.Resubmitted || onboarding.status === EOnboardingStatus.ModificationRequested;
     if (!allowed) {
       return errorResponse(400, "Modification can only be requested on submitted digital onboardings", {
         reason: "STATUS_NOT_SUBMITTED_OR_RESUBMITTED",

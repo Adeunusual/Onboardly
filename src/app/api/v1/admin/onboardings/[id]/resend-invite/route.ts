@@ -7,30 +7,36 @@ import { errorResponse, successResponse } from "@/lib/utils/apiResponse";
 import { guard } from "@/lib/utils/auth/authUtils";
 import { hashString } from "@/lib/utils/encryption";
 import { buildOnboardingInvite, createOnboardingAuditLogSafe } from "@/lib/utils/onboardingUtils";
-import { sendEmployeeOnboardingInvitation } from "@/lib/mail/employee/sendEmployeeOnboardingInvitation";
 
 import { OnboardingModel } from "@/mongoose/models/Onboarding";
 
 import { EOnboardingMethod, EOnboardingStatus } from "@/types/onboarding.types";
 import { EOnboardingActor, EOnboardingAuditAction } from "@/types/onboardingAuditLog.types";
 
+import { sendEmployeeOnboardingInvitation } from "@/lib/mail/employee/sendEmployeeOnboardingInvitation";
+import { sendEmployeeOnboardingModificationRequest } from "@/lib/mail/employee/sendEmployeeOnboardingModificationRequest";
+
 // -----------------------------------------------------------------------------
 // POST /api/v1/admin/onboardings/[id]/resend-invite
 //
-// Re-sends the INITIAL digital onboarding invitation to an employee.
+// Re-sends the latest DIGITAL onboarding email to an employee.
+//
+// Allowed states:
+// - InviteGenerated: sends the initial onboarding invitation email.
+// - ModificationRequested: sends the modification-request email (re-using the
+//   previously saved modificationRequestMessage).
 //
 // Behavior:
-// - Allowed only for DIGITAL onboardings.
-// - Allowed only when status is InviteGenerated.
+// - DIGITAL only.
 // - Generates a new secure invite token and replaces the previous one
 //   (old links are immediately invalidated).
 // - Clears any existing OTP.
-// - Resets invite expiry and sends a fresh onboarding email to the employee.
+// - Resets invite expiry and sends the appropriate email template.
 // - Records an INVITE_RESENT audit log entry attributed to the HR actor.
 //
 // Reliability:
 // - If email sending fails, we attempt to roll back the onboarding record to its
-//   previous invite/otp state (best-effort) so the employee is not stranded.
+//   previous invite/otp/updatedAt state (best-effort) so the employee is not stranded.
 // -----------------------------------------------------------------------------
 export const POST = async (req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   try {
@@ -47,15 +53,26 @@ export const POST = async (req: NextRequest, { params }: { params: Promise<{ id:
       return errorResponse(400, "Resend invite is only allowed for digital onboardings");
     }
 
-    // Standard behavior: resend-invite is ONLY for the initial invite state.
-    if (onboarding.status !== EOnboardingStatus.InviteGenerated) {
+    const isInvite = onboarding.status === EOnboardingStatus.InviteGenerated;
+    const isModReq = onboarding.status === EOnboardingStatus.ModificationRequested;
+
+    if (!isInvite && !isModReq) {
       return errorResponse(400, "Cannot resend invite in the current onboarding state", {
-        reason: "STATUS_NOT_INVITE_GENERATED",
+        reason: "STATUS_NOT_ELIGIBLE_FOR_RESEND",
         status: onboarding.status,
       });
     }
 
-    const prevStatus = onboarding.status;
+    // If we are resending a modification request, we must have a persisted message to include.
+    const modMessage = typeof (onboarding as any).modificationRequestMessage === "string" ? (onboarding as any).modificationRequestMessage.trim() : "";
+
+    if (isModReq && !modMessage) {
+      return errorResponse(400, "Cannot resend modification request because no modification message is on file", {
+        reason: "MISSING_MODIFICATION_REQUEST_MESSAGE",
+        status: onboarding.status,
+      });
+    }
+
     const prevInvite = onboarding.invite;
     const prevOtp = (onboarding as any).otp;
     const prevUpdatedAt = onboarding.updatedAt;
@@ -74,33 +91,43 @@ export const POST = async (req: NextRequest, { params }: { params: Promise<{ id:
     await onboarding.save();
 
     try {
-      // Send email with the fresh token
-      await sendEmployeeOnboardingInvitation({
-        to: onboarding.email,
-        firstName: onboarding.firstName,
-        lastName: onboarding.lastName,
-        method: onboarding.method,
-        subsidiary: onboarding.subsidiary,
-        baseUrl,
-        inviteToken: rawInviteToken,
-      });
+      if (isInvite) {
+        // Initial invite email
+        await sendEmployeeOnboardingInvitation({
+          to: onboarding.email,
+          firstName: onboarding.firstName,
+          lastName: onboarding.lastName,
+          method: onboarding.method,
+          subsidiary: onboarding.subsidiary,
+          baseUrl,
+          inviteToken: rawInviteToken,
+        });
+      } else {
+        // Modification requested email (reuse stored message)
+        await sendEmployeeOnboardingModificationRequest({
+          to: onboarding.email,
+          firstName: onboarding.firstName,
+          lastName: onboarding.lastName,
+          subsidiary: onboarding.subsidiary,
+          baseUrl,
+          inviteToken: rawInviteToken,
+          message: modMessage,
+        });
+      }
     } catch (emailError) {
       // Best-effort rollback so employee isn't stranded with an undispatched link
       try {
-        onboarding.status = prevStatus; // status doesn't change in this route, but keep it safe
         onboarding.invite = prevInvite;
         (onboarding as any).otp = prevOtp;
         onboarding.updatedAt = prevUpdatedAt;
-
         await onboarding.save();
       } catch (rollbackErr) {
         console.error("Failed to rollback onboarding after resend-invite email error", rollbackErr);
       }
-
       throw emailError;
     }
 
-    // Audit: invite resent
+    // Audit: invite resent (template depends on status)
     await createOnboardingAuditLogSafe({
       onboardingId: onboarding._id.toString(),
       action: EOnboardingAuditAction.INVITE_RESENT,
@@ -110,12 +137,15 @@ export const POST = async (req: NextRequest, { params }: { params: Promise<{ id:
         name: user.name,
         email: user.email,
       },
-      message: `Onboarding invitation re-sent by ${user.name}; a new onboarding link was emailed to the employee.`,
+      message: isInvite
+        ? `Onboarding invitation re-sent by ${user.name}; a new onboarding link was emailed to the employee.`
+        : `Modification-request email re-sent by ${user.name}; a new onboarding link was emailed to the employee.`,
       metadata: {
-        previousStatus: prevStatus,
         status: onboarding.status,
         method: onboarding.method,
         subsidiary: onboarding.subsidiary,
+        emailTemplate: isInvite ? "INVITATION" : "MODIFICATION_REQUEST",
+        modificationRequestMessage: isModReq ? modMessage : undefined,
         source: "ADMIN_RESEND_INVITE",
       },
     });
