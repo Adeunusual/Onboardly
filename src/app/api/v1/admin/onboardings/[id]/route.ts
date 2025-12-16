@@ -6,7 +6,7 @@ import { errorResponse, successResponse } from "@/lib/utils/apiResponse";
 import { guard } from "@/lib/utils/auth/authUtils";
 import { parseJsonBody } from "@/lib/utils/reqParser";
 
-import { makeEntityFinalPrefix, finalizeAssetWithCache, deleteS3Objects } from "@/lib/utils/s3Helper";
+import { makeEntityFinalPrefix, finalizeAssetWithCache, deleteS3Objects, collectS3KeysDeep } from "@/lib/utils/s3Helper";
 
 import { OnboardingModel } from "@/mongoose/models/Onboarding";
 
@@ -325,32 +325,6 @@ export const PUT = async (req: NextRequest, { params }: { params: Promise<{ id: 
  *     await OnboardingAuditLogModel.deleteMany({ onboardingId: onboarding._id })
  *   after creating the DELETED audit entry (or skip creating it if you delete logs).
  */
-
-function collectS3KeysDeep(input: any): string[] {
-  const out = new Set<string>();
-  const seen = new Set<any>();
-
-  const walk = (v: any) => {
-    if (!v || typeof v !== "object") return;
-    if (seen.has(v)) return;
-    seen.add(v);
-
-    // Common file asset shape: { s3Key, url, mimeType, ... }
-    if (typeof (v as any).s3Key === "string" && (v as any).s3Key.trim()) {
-      out.add((v as any).s3Key.trim());
-    }
-
-    if (Array.isArray(v)) {
-      for (const item of v) walk(item);
-      return;
-    }
-
-    for (const key of Object.keys(v)) walk((v as any)[key]);
-  };
-
-  walk(input);
-  return Array.from(out);
-}
 
 export const DELETE = async (_req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   try {
