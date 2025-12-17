@@ -11,6 +11,7 @@ export const NEXT_IMAGE_DOMAINS = process.env.NEXT_IMAGE_DOMAINS!;
 export const CRON_SECRET = process.env.CRON_SECRET!;
 export const AUTH_COOKIE_NAME = process.env.AUTH_COOKIE_NAME! || "";
 export const NEXTAUTH_SECRET = process.env.NEXTAUTH_SECRET!;
+export const ADMIN_EMAILS = process.env.ADMIN_EMAILS!;
 export const isProd = process.env.NODE_ENV === "production";
 export const PORT = process.env.PORT! ?? 3000;
 export const DISABLE_AUTH = process.env.DISABLE_AUTH === "true";
