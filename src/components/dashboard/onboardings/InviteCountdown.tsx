@@ -13,30 +13,44 @@ function formatRemaining(ms: number) {
   return `${sec}s`;
 }
 
-export function InviteCountdown({ expiresAt }: { expiresAt?: string | Date }) {
+export function InviteCountdown({
+  expiresAt,
+  hideWhenExpired,
+  nowMs,
+}: {
+  expiresAt?: string | Date;
+  /** If true, render nothing when the timer has expired. */
+  hideWhenExpired?: boolean;
+  /** Optional shared clock (ms since epoch) to avoid per-row intervals. */
+  nowMs?: number;
+}) {
   const target = useMemo(() => {
     if (!expiresAt) return null;
     const d = typeof expiresAt === "string" ? new Date(expiresAt) : expiresAt;
     return isNaN(d.getTime()) ? null : d;
   }, [expiresAt]);
 
-  const [now, setNow] = useState(() => Date.now());
+  const [localNow, setLocalNow] = useState(() => Date.now());
+  const now = nowMs ?? localNow;
 
   useEffect(() => {
-    if (!target) return;
-    const id = window.setInterval(() => setNow(Date.now()), 1000);
+    // If a shared clock is provided, do not create an interval here.
+    if (!target || nowMs != null) return;
+    const id = window.setInterval(() => setLocalNow(Date.now()), 1000);
     return () => window.clearInterval(id);
-  }, [target]);
+  }, [target, nowMs]);
 
   if (!target) return null;
 
   const remaining = target.getTime() - now;
   const expired = remaining <= 0;
 
+  if (expired && hideWhenExpired) return null;
+
   return (
     <span
       className={[
-        "text-[11px] font-medium",
+        "text-[11px] font-medium leading-none whitespace-nowrap",
         expired ? "text-[var(--dash-red)]" : "text-[var(--dash-muted)]",
       ].join(" ")}
       title={target.toLocaleString()}
