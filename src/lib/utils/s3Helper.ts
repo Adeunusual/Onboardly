@@ -230,6 +230,53 @@ export async function finalizeVectorWithCache(vec: IFileAsset[] | undefined, des
   return out;
 }
 
+/**
+ * Deep-scan an arbitrary object graph and collect any `s3Key` string fields.
+ *
+ * - Handles arrays + objects
+ * - Dedupes keys
+ * - Guards against cycles via `seen`
+ *
+ * Use cases:
+ * - Deleting all S3 objects referenced by a document (terminated onboarding deletion)
+ * - Auditing or reporting referenced assets
+ */
+export function collectS3KeysDeep(input: unknown): string[] {
+  const out = new Set<string>();
+  const seen = new Set<object>();
+
+  const walk = (v: unknown) => {
+    if (!v || typeof v !== "object") return;
+
+    // Cycle guard
+    if (seen.has(v as object)) return;
+    seen.add(v as object);
+
+    // Arrays
+    if (Array.isArray(v)) {
+      for (const item of v) walk(item);
+      return;
+    }
+
+    // Objects
+    const obj = v as Record<string, unknown>;
+
+    // Common file asset shape: { s3Key, url, mimeType, ... }
+    const maybeKey = obj["s3Key"];
+    if (typeof maybeKey === "string") {
+      const k = maybeKey.trim();
+      if (k) out.add(k);
+    }
+
+    for (const key of Object.keys(obj)) {
+      walk(obj[key]);
+    }
+  };
+
+  walk(input);
+  return Array.from(out);
+}
+
 /* ───────────── Client-side presigned upload convenience ───────────── */
 
 /**
