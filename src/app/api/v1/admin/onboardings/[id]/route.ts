@@ -17,6 +17,7 @@ import { EOnboardingActor, EOnboardingAuditAction } from "@/types/onboardingAudi
 import { createOnboardingAuditLogSafe } from "@/lib/utils/onboardingUtils";
 import { ESubsidiary } from "@/types/shared.types";
 import { validateIndiaOnboardingForm } from "@/lib/validation/onboardingFormValidation";
+import { OnboardingAuditLogModel } from "@/mongoose/models/OnboardingAuditLog";
 
 /* -------------------------------------------------------------------------- */
 /* Helpers                                                                    */
@@ -371,9 +372,8 @@ export const DELETE = async (_req: NextRequest, { params }: { params: Promise<{ 
       },
     });
 
-    // OPTIONAL: If you want to also delete audit logs, uncomment:
-    // import { OnboardingAuditLogModel } from "@/mongoose/models/OnboardingAuditLog";
-    // await OnboardingAuditLogModel.deleteMany({ onboardingId: onboarding._id });
+    // delete associated audit logs
+    await OnboardingAuditLogModel.deleteMany({ onboardingId: onboarding._id });
 
     // 4) Delete the onboarding document
     await OnboardingModel.deleteOne({ _id: onboarding._id });
