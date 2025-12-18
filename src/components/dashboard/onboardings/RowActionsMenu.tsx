@@ -82,15 +82,17 @@ export function RowActionsMenu({
               "absolute z-[70] overflow-hidden rounded-2xl border shadow-[var(--dash-shadow)]",
               "border-[var(--dash-border)] bg-[var(--dash-surface)]",
               // Sit just to the left of the trigger button.
-              "right-10 top-1/2 -translate-y-1/2"
+              "right-10 top-1/2 -translate-y-1/2",
+              // Size to content (no extra space for 2 buttons), but stay safe on small screens.
+              "w-max max-w-[min(420px,70vw)]"
             )}
-            style={{ width: 240 }}
             initial={{ opacity: 0, x: 14 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 14 }}
             transition={{ duration: 0.18, ease: "easeOut" }}
           >
-            <div className="flex items-center gap-2 p-2">
+            {/* Allow wrapping so actions never get clipped by the drawer width */}
+            <div className="flex flex-wrap items-center justify-end gap-2 p-2">
               {enabledActions.map((a) => {
                 const Icon = a.Icon;
                 const disabled = Boolean(a.disabled);

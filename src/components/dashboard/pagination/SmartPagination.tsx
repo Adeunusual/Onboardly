@@ -63,7 +63,7 @@ export function SmartPagination({
   const items = buildPaginationItems(safePage, safePages);
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 min-w-0">
       <button
         type="button"
         onClick={() => onPage(Math.max(1, safePage - 1))}
@@ -78,7 +78,15 @@ export function SmartPagination({
         <ChevronLeft className="h-4 w-4" />
       </button>
 
-      <div className="flex items-center gap-1">
+      {/* Mobile: keep pagination compact to avoid overflow */}
+      <div className="flex items-center gap-2 sm:hidden">
+        <span className="text-xs font-semibold text-[var(--dash-muted)]">
+          {safePage}/{safePages}
+        </span>
+      </div>
+
+      {/* Desktop+: show the full smart pagination */}
+      <div className="hidden sm:flex items-center gap-1 min-w-0">
         {items.map((it, idx) =>
           it === "dots" ? (
             <span

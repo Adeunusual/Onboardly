@@ -101,6 +101,84 @@ export async function terminateOnboarding(
   );
 }
 
+/* -------------------------------------------------------------------------- */
+/* Single onboarding detail + actions (HR detail view)                         */
+/* -------------------------------------------------------------------------- */
+
+export async function getAdminOnboarding(id: string) {
+  return request<{ onboarding: any }>(`/api/v1/admin/onboardings/${id}`);
+}
+
+export async function approveOnboarding(
+  id: string,
+  body: { employeeNumber?: string }
+) {
+  return postJson<typeof body, { onboarding: any }>(
+    `/api/v1/admin/onboardings/${id}/approve`,
+    body
+  );
+}
+
+export async function requestModification(
+  id: string,
+  body: { message: string }
+) {
+  return postJson<typeof body, { onboarding: any }>(
+    `/api/v1/admin/onboardings/${id}/request-modification`,
+    body
+  );
+}
+
+export async function updateAdminOnboarding(id: string, body: { indiaFormData: any }) {
+  return request<{ onboarding: any }>(`/api/v1/admin/onboardings/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(body),
+  });
+}
+
+export type AuditLogListItem = {
+  id: string;
+  onboardingId: string;
+  action: string;
+  message: string;
+  actor: any;
+  createdAt: Date | string;
+  metadata?: Record<string, unknown>;
+};
+
+export type AuditLogListMeta<TFilters> = {
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+  sortBy: string;
+  sortDir: "asc" | "desc";
+  filters: TFilters;
+};
+
+export async function getOnboardingAuditLogs(params: {
+  id: string;
+  page?: number;
+  pageSize?: number;
+  from?: string;
+  to?: string;
+  sortBy?: "createdAt";
+  sortDir?: "asc" | "desc";
+}) {
+  const sp = new URLSearchParams();
+  if (params.page) sp.set("page", String(params.page));
+  if (params.pageSize) sp.set("pageSize", String(params.pageSize));
+  if (params.from) sp.set("from", params.from);
+  if (params.to) sp.set("to", params.to);
+  if (params.sortBy) sp.set("sortBy", params.sortBy);
+  if (params.sortDir) sp.set("sortDir", params.sortDir);
+
+  return request<{
+    items: AuditLogListItem[];
+    meta: AuditLogListMeta<{ from?: string | null; to?: string | null }>;
+  }>(`/api/v1/admin/onboardings/${params.id}/audit-logs?${sp.toString()}`);
+}
+
 export type CreateAdminOnboardingBody = {
   subsidiary: ESubsidiary;
   method: EOnboardingMethod;

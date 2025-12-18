@@ -5,7 +5,15 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
-import { Home, Ban, Settings, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Home,
+  Ban,
+  Settings,
+  ChevronLeft,
+  ChevronRight,
+  FileText,
+  ScrollText,
+} from "lucide-react";
 
 import ProfileDropdown from "@/components/shared/ProfileDropdown";
 import { ThemeModeSwitcher } from "@/components/dashboard/theme/ThemeModeSwitcher";
@@ -17,11 +25,10 @@ type NavItem = {
   Icon: any;
 };
 
-const navItems: NavItem[] = [
-  { href: "/dashboard", label: "Home", Icon: Home },
-  { href: "/dashboard/terminated", label: "Terminated", Icon: Ban },
-  { href: "/dashboard/settings", label: "Settings", Icon: Settings },
-];
+type NavGroup = {
+  label: string;
+  items: NavItem[];
+};
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   // Sidebar is fixed/open on desktop (xl+). Below xl, it becomes collapsible.
@@ -29,38 +36,117 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const sp = useSearchParams();
   const subsidiary = sp.get("subsidiary");
+  const onboardingIdFromQuery = sp.get("onboardingId");
   const terminatedHref = subsidiary
     ? `/dashboard/terminated?subsidiary=${encodeURIComponent(subsidiary)}`
     : "/dashboard/terminated";
 
+  // Detect onboarding detail routes to switch sidebar to "Application" mode.
+  const onboardingMatch = pathname.match(/^\/dashboard\/onboardings\/([^/]+)(?:\/(audit-logs))?$/);
+  const onboardingId = onboardingMatch?.[1] ?? null;
+  // Keep "Application mode" even when navigating to global pages (like Settings)
+  // by preserving context via `?onboardingId=` in the URL.
+  const contextOnboardingId = onboardingId ?? onboardingIdFromQuery;
+  const isOnboardingArea = Boolean(contextOnboardingId);
+
+  const groups: NavGroup[] = isOnboardingArea
+    ? [
+        {
+          label: "NAVIGATION",
+          items: [{ href: "/dashboard", label: "Home", Icon: Home }],
+        },
+        {
+          label: "APPLICATION",
+          items: [
+            {
+              href: `/dashboard/onboardings/${contextOnboardingId}`,
+              label: "Onboarding details",
+              Icon: FileText,
+            },
+            {
+              href: `/dashboard/onboardings/${contextOnboardingId}/audit-logs`,
+              label: "Audit logs",
+              Icon: ScrollText,
+            },
+          ],
+        },
+        {
+          label: "SYSTEM",
+          items: [{ href: "/dashboard/settings", label: "Settings", Icon: Settings }],
+        },
+      ]
+    : [
+        {
+          label: "NAVIGATION",
+          items: [
+            { href: "/dashboard", label: "Home", Icon: Home },
+            { href: "/dashboard/terminated", label: "Terminated", Icon: Ban },
+          ],
+        },
+        {
+          label: "SYSTEM",
+          items: [{ href: "/dashboard/settings", label: "Settings", Icon: Settings }],
+        },
+      ];
+
+  function isActive(href: string) {
+    if (href === "/dashboard") return pathname === "/dashboard";
+    if (href === "/dashboard/terminated") return pathname === "/dashboard/terminated";
+    if (href === "/dashboard/settings") return pathname === "/dashboard/settings";
+
+    // Mutually-exclusive active state between details and audit logs.
+    if (contextOnboardingId && href === `/dashboard/onboardings/${contextOnboardingId}`) {
+      return pathname === `/dashboard/onboardings/${contextOnboardingId}`;
+    }
+    if (
+      contextOnboardingId &&
+      href === `/dashboard/onboardings/${contextOnboardingId}/audit-logs`
+    ) {
+      return pathname === `/dashboard/onboardings/${contextOnboardingId}/audit-logs`;
+    }
+
+    return false;
+  }
+
   const sidebarNav = (
     <div className="px-3 py-4">
-      <div className="mb-3 px-2 text-[11px] font-semibold tracking-[0.26em] text-[var(--dash-muted)]">
-        NAVIGATION
-      </div>
-      <nav className="space-y-1">
-        {navItems.map(({ href, label, Icon }) => {
-          const computedHref = href === "/dashboard/terminated" ? terminatedHref : href;
-          const active = pathname === href;
-          return (
-            <Link
-              key={href}
-              href={computedHref}
-              onClick={() => setSidebarOpen(false)}
-              className={cn(
-                "flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition",
-                active
-                  ? "bg-[var(--dash-red-soft)] text-[var(--dash-text)]"
-                  : "text-[var(--dash-muted)] hover:bg-[var(--dash-surface-2)]"
-              )}
-              title={label}
-            >
-              <Icon className="h-4 w-4 shrink-0" />
-              <span className="truncate">{label}</span>
-            </Link>
-          );
-        })}
-      </nav>
+      {groups.map((group) => (
+        <div key={group.label} className="mb-5 last:mb-0">
+          <div className="mb-3 px-2 text-[11px] font-semibold tracking-[0.26em] text-[var(--dash-muted)]">
+            {group.label}
+          </div>
+          <nav className="space-y-1">
+            {group.items.map(({ href, label, Icon }) => {
+              const computedHref =
+                href === "/dashboard/terminated"
+                  ? terminatedHref
+                  : href === "/dashboard/settings" && contextOnboardingId
+                    ? `/dashboard/settings?onboardingId=${encodeURIComponent(contextOnboardingId)}`
+                    : href;
+              const active = isActive(href);
+              return (
+                <Link
+                  key={href}
+                  href={computedHref}
+                  onClick={() => setSidebarOpen(false)}
+                  className={cn(
+                    "flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition",
+                    "cursor-pointer",
+                    active
+                      ? "bg-[var(--dash-red-soft)] text-[var(--dash-text)]"
+                      : "text-[var(--dash-muted)] hover:bg-[var(--dash-surface-2)]"
+                  )}
+                  title={label}
+                >
+                  <Icon className="h-4 w-4 shrink-0" />
+                  <span className="truncate">{label}</span>
+                </Link>
+              );
+            })}
+          </nav>
+          <div className="mt-5 border-b border-[var(--dash-border)] last:hidden" />
+        </div>
+      ))}
     </div>
   );
 
