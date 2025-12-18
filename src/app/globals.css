@@ -67,6 +67,7 @@ body {
   --dash-text: #e2e8f0;
   --dash-muted: #9aa9be;
   --dash-border: rgba(148, 163, 184, 0.16);
+  --dash-border-strong: rgba(148, 163, 184, 0.34);
   --dash-shadow: 0 14px 34px rgba(0, 0, 0, 0.62);
 
   --dash-red: #ff3b3f;
@@ -98,6 +99,7 @@ html[data-dash-theme="dark"] .dashboard-root {
   --dash-text: #e2e8f0;
   --dash-muted: #9aa9be;
   --dash-border: rgba(148, 163, 184, 0.16);
+  --dash-border-strong: rgba(148, 163, 184, 0.34);
   --dash-shadow: 0 14px 34px rgba(0, 0, 0, 0.62);
 
   --dash-red: #ff3b3f;
@@ -107,6 +109,127 @@ html[data-dash-theme="dark"] .dashboard-root {
   --app-overlay: rgba(0, 0, 0, 0.62);
   --app-modal-surface: var(--dash-surface);
 }
+
+/* ================================================================== */
+/* Scoped skin for employee-side form components inside dashboard       */
+/* ================================================================== */
+/**
+ * Employee onboarding sections use hardcoded Tailwind colors (bg-white, text-slate-*, etc).
+ * When they are reused inside the HR dashboard, we remap those colors to dashboard tokens
+ * without changing employee-side styling.
+ *
+ * Usage:
+ *   <div class="dashboard-root" ...>
+ *     <div class="dash-form-skin"> ...employee sections... </div>
+ *   </div>
+ */
+.dashboard-root .dash-form-skin {
+  color: var(--dash-text);
+}
+
+/* Background remaps */
+.dashboard-root .dash-form-skin .bg-white,
+.dashboard-root .dash-form-skin .bg-white\/80,
+.dashboard-root .dash-form-skin .bg-white\/90 {
+  background-color: var(--dash-surface) !important;
+}
+
+.dashboard-root[data-theme="dark"] .dash-form-skin input.bg-white,
+.dashboard-root[data-theme="dark"] .dash-form-skin textarea.bg-white,
+.dashboard-root[data-theme="dark"] .dash-form-skin select.bg-white,
+.dashboard-root[data-theme="dark"] .dash-form-skin input.bg-white\/80,
+.dashboard-root[data-theme="dark"] .dash-form-skin textarea.bg-white\/80,
+.dashboard-root[data-theme="dark"] .dash-form-skin select.bg-white\/80,
+.dashboard-root[data-theme="dark"] .dash-form-skin input.bg-white\/90,
+.dashboard-root[data-theme="dark"] .dash-form-skin textarea.bg-white\/90,
+.dashboard-root[data-theme="dark"] .dash-form-skin select.bg-white\/90 {
+  /* Inputs that use bg-white should still look like fields in dark mode */
+  background-color: var(--dash-surface-2) !important;
+}
+
+.dashboard-root .dash-form-skin .bg-slate-50,
+.dashboard-root .dash-form-skin .hover\:bg-slate-50:hover,
+.dashboard-root .dash-form-skin .bg-slate-100 {
+  background-color: var(--dash-surface-2) !important;
+}
+
+/* Border remaps */
+.dashboard-root .dash-form-skin .border-slate-200,
+.dashboard-root .dash-form-skin .border-slate-300,
+.dashboard-root .dash-form-skin .border-slate-100 {
+  border-color: var(--dash-border) !important;
+}
+
+.dashboard-root[data-theme="dark"] .dash-form-skin input.border-slate-200,
+.dashboard-root[data-theme="dark"] .dash-form-skin textarea.border-slate-200,
+.dashboard-root[data-theme="dark"] .dash-form-skin select.border-slate-200,
+.dashboard-root[data-theme="dark"] .dash-form-skin input.border-slate-300,
+.dashboard-root[data-theme="dark"] .dash-form-skin textarea.border-slate-300,
+.dashboard-root[data-theme="dark"] .dash-form-skin select.border-slate-300 {
+  /* Make field borders clearly visible in dark mode (prefilled fields look like this) */
+  border-color: var(--dash-border-strong) !important;
+}
+
+/* Text remaps */
+.dashboard-root .dash-form-skin .text-slate-900,
+.dashboard-root .dash-form-skin .text-slate-800 {
+  color: var(--dash-text) !important;
+}
+.dashboard-root .dash-form-skin .text-slate-700,
+.dashboard-root .dash-form-skin .text-slate-600,
+.dashboard-root .dash-form-skin .text-slate-500 {
+  color: var(--dash-muted) !important;
+}
+
+/* Links / accents used in employee sections */
+.dashboard-root .dash-form-skin .text-sky-700 {
+  color: var(--dash-red-2) !important;
+}
+
+/* Inputs: ensure good contrast in both themes */
+.dashboard-root .dash-form-skin input,
+.dashboard-root .dash-form-skin textarea,
+.dashboard-root .dash-form-skin select {
+  background-color: var(--dash-surface);
+  color: var(--dash-text);
+  border-color: var(--dash-border);
+}
+
+.dashboard-root[data-theme="dark"] .dash-form-skin input,
+.dashboard-root[data-theme="dark"] .dash-form-skin textarea,
+.dashboard-root[data-theme="dark"] .dash-form-skin select {
+  /* In dark mode, inputs need a slightly raised surface to read as "fields" */
+  background-color: var(--dash-surface-2);
+  /* Stronger borders so fields are clearly visible */
+  border-color: var(--dash-border-strong) !important;
+}
+
+.dashboard-root .dash-form-skin input[readonly],
+.dashboard-root .dash-form-skin textarea[readonly],
+.dashboard-root .dash-form-skin select[disabled],
+.dashboard-root .dash-form-skin input:disabled,
+.dashboard-root .dash-form-skin textarea:disabled {
+  background-color: var(--dash-surface-2);
+  color: var(--dash-muted);
+}
+
+.dashboard-root .dash-form-skin input::placeholder,
+.dashboard-root .dash-form-skin textarea::placeholder {
+  color: var(--dash-muted);
+  opacity: 0.75;
+}
+
+.dashboard-root .dash-form-skin input:focus,
+.dashboard-root .dash-form-skin textarea:focus,
+.dashboard-root .dash-form-skin select:focus {
+  outline: none;
+  border-color: var(--dash-red-2);
+  box-shadow: 0 0 0 3px var(--dash-red-soft);
+}
+
+/* Gender pill selection (employee section uses bg-slate-900) */
+/* Keep employee-side "selected" styling (e.g. gender toggle uses bg-slate-900).
+   Do NOT remap this to dashboard red. */
 
 /* ================================================================== */
 /* Hero Brand Pill Component                                          */
