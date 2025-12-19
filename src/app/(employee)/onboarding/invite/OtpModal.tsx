@@ -217,13 +217,14 @@ export const OtpModal: React.FC<OtpModalProps> = ({
             />
           </div>
 
-          {/* Action Buttons: Resend and Verify */}
-          <div className="flex items-center justify-between gap-2">
+          {/* Action Buttons: Send/Resend and Verify */}
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <Button
               type="button"
-              variant="ghost"
+              variant="secondary"
               onClick={sendOtp}
               disabled={isSending}
+              className="w-full sm:w-auto"
             >
               {isSending ? "Sending..." : sendLabel}
             </Button>
@@ -231,6 +232,7 @@ export const OtpModal: React.FC<OtpModalProps> = ({
               type="submit"
               isLoading={isVerifying}
               disabled={otp.length < 6}
+              className="w-full sm:w-auto"
             >
               Verify &amp; continue
             </Button>
