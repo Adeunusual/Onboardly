@@ -178,15 +178,15 @@ export function RHFFileUpload({
               hasError ? "border-red-500" : "border-slate-300"
             )}
           >
-            <div className="flex items-center gap-3">
+            <div className="flex flex-1 min-w-0 items-center gap-3">
               <div className="flex h-10 w-8 items-center justify-center rounded-md bg-red-50 border border-red-200 text-xs font-semibold text-red-700">
                 {isPdf ? "PDF" : "FILE"}
               </div>
-              <div className="flex flex-col">
+              <div className="flex min-w-0 flex-col">
                 <span className="text-sm font-medium text-slate-800">
                   Document uploaded
                 </span>
-                <span className="text-xs text-slate-500 truncate max-w-[220px]">
+                <span className="text-xs text-slate-500 truncate max-w-full">
                   {asset?.originalName || "PDF file"}
                 </span>
 
@@ -204,7 +204,7 @@ export function RHFFileUpload({
               type="button"
               onClick={handleRemove}
               disabled={disabled || status === "uploading" || status === "deleting"}
-              className="ml-3 bg-red-500 text-white rounded-full w-7 h-7 flex items-center justify-center text-xs hover:bg-red-600 disabled:opacity-60"
+              className="ml-3 shrink-0 bg-red-500 text-white rounded-full w-7 h-7 flex items-center justify-center text-xs hover:bg-red-600 disabled:opacity-60"
               aria-label="Remove uploaded document"
             >
               <X size={14} />
