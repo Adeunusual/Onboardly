@@ -325,8 +325,23 @@ export function HrOnboardingEditForm({
     <FormProvider {...methods}>
       <RequiredFieldProvider isRequired={isRequired}>
         <div className="space-y-4">
-          {/* Sticky stack: tabs + update bar */}
-          <div className="sticky top-16 z-20 space-y-3 pb-2 bg-[var(--dash-bg)]/75 backdrop-blur-xl supports-[backdrop-filter]:bg-[var(--dash-bg)]/60">
+          {/* Mobile: ONLY the update bar is sticky (tabs scroll away to save space) */}
+          {showUpdateBar && (
+            <div className="sticky top-16 z-20 mb-3 sm:hidden bg-[var(--dash-bg)]/75 backdrop-blur-xl supports-[backdrop-filter]:bg-[var(--dash-bg)]/60">
+              <UpdateSubmitBar
+                dirty={isDirty}
+                busy={saving}
+                errorMessage={barError}
+                onSubmit={onSave}
+                onDiscard={onDiscard}
+                placement="top"
+                sticky={false}
+              />
+            </div>
+          )}
+
+          {/* sm+: tabs + update bar behave like a single sticky stack */}
+          <div className="space-y-3 pb-2 sm:sticky sm:top-16 sm:z-20 sm:bg-[var(--dash-bg)]/75 sm:backdrop-blur-xl sm:supports-[backdrop-filter]:bg-[var(--dash-bg)]/60">
             {/* Tabs */}
             <div className="rounded-2xl border border-[var(--dash-border)] bg-[var(--dash-surface)] shadow-[var(--dash-shadow)] p-2">
               <div className="flex flex-wrap gap-2">
@@ -342,17 +357,19 @@ export function HrOnboardingEditForm({
               </div>
             </div>
 
-            {/* Update bar (non-sticky; parent handles the sticky stacking) */}
+            {/* Update bar (non-sticky; parent provides sticky stacking) */}
             {showUpdateBar && (
-              <UpdateSubmitBar
-                dirty={isDirty}
-                busy={saving}
-                errorMessage={barError}
-                onSubmit={onSave}
-                onDiscard={onDiscard}
-                placement="top"
-                sticky={false}
-              />
+              <div className="hidden sm:block">
+                <UpdateSubmitBar
+                  dirty={isDirty}
+                  busy={saving}
+                  errorMessage={barError}
+                  onSubmit={onSave}
+                  onDiscard={onDiscard}
+                  placement="top"
+                  sticky={false}
+                />
+              </div>
             )}
           </div>
 
