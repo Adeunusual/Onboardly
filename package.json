@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint . --max-warnings=0",
-    "zip:worker:onboardings": "node -e \"const fs=require('fs');fs.mkdirSync('.lambda-build',{recursive:true});try{fs.unlinkSync('.lambda-build/onboardingsReportWorker.zip')}catch{}\" && npx esbuild src/workers/onboardingsReportWorker.ts --bundle --platform=node --target=node20 --minify --legal-comments=none --outfile=.lambda-build/worker.js && (cd .lambda-build && npx bestzip onboardingsReportWorker.zip worker.js && rm -f worker.js)"
+    "zip:worker:onboardings": "node scripts/zipOnboardingsReportWorker.js",
+    "zip:worker:application-form-pdf": "node scripts/zipApplicationFormPdfWorker.js"
   },
   "dependencies": {
     "@aws-sdk/client-lambda": "^3.957.0",
