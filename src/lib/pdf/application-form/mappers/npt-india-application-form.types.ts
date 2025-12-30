@@ -70,21 +70,14 @@ export enum ENptIndiaApplicationFormFields {
   EDU_OTHER_TEXT = "edu_other_text",
 
   PRIMARY_SCHOOL_NAME = "primary_school_name",
-  PRIMARY_SCHOOL_LOCATION = "primary_school_location",
   PRIMARY_YEAR_COMPLETED = "primary_year_completed",
 
   HIGH_SCHOOL_NAME = "high_school_name",
-  HIGH_SCHOOL_BOARD = "high_school_board",
   HIGH_SCHOOL_YEAR_COMPLETED = "high_school_year_completed",
-  HIGH_SCHOOL_STREAM = "high_school_stream",
-  HIGH_SCHOOL_GRADE = "high_school_grade",
 
   INSTITUTION_NAME = "institution_name",
-  UNIVERSITY_OR_BOARD = "university_or_board",
-  FIELD_OF_STUDY = "field_of_study",
   START_YEAR = "start_year",
   END_YEAR = "end_year",
-  GRADE_OR_PERCENTAGE = "grade_or_percentage",
 
   /* ======================= Page 4: Employment History ========================= */
 

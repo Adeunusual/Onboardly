@@ -149,25 +149,18 @@ export function buildNptIndiaApplicationFormPayload(formData: IIndiaOnboardingFo
   /* -------------------- Block A: Primary School (only) -------------------- */
 
   payload[F.PRIMARY_SCHOOL_NAME] = safeStr(edu?.schoolName);
-  payload[F.PRIMARY_SCHOOL_LOCATION] = safeStr(edu?.schoolLocation);
   payload[F.PRIMARY_YEAR_COMPLETED] = fmtYear(edu?.primaryYearCompleted);
 
   /* ----------------- Block B: High School/Secondary (only) ---------------- */
 
   payload[F.HIGH_SCHOOL_NAME] = safeStr(edu?.highSchoolInstitutionName);
-  payload[F.HIGH_SCHOOL_BOARD] = safeStr(edu?.highSchoolBoard);
   payload[F.HIGH_SCHOOL_YEAR_COMPLETED] = fmtYear(edu?.highSchoolYearCompleted);
-  payload[F.HIGH_SCHOOL_STREAM] = safeStr(edu?.highSchoolStream);
-  payload[F.HIGH_SCHOOL_GRADE] = safeStr(edu?.highSchoolGradeOrPercentage);
 
   /* -------- Block C: Diploma/Bachelor/Master/Doctorate/Other (only) -------- */
 
   payload[F.INSTITUTION_NAME] = safeStr(edu?.institutionName);
-  payload[F.UNIVERSITY_OR_BOARD] = safeStr(edu?.universityOrBoard);
-  payload[F.FIELD_OF_STUDY] = safeStr(edu?.fieldOfStudy);
   payload[F.START_YEAR] = fmtYear(edu?.startYear);
   payload[F.END_YEAR] = fmtYear(edu?.endYear);
-  payload[F.GRADE_OR_PERCENTAGE] = safeStr(edu?.gradeOrCgpa);
 
   /* ======================================================================== */
   /* Page 4: Employment History                                               */

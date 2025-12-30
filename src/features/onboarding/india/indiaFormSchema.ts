@@ -291,21 +291,14 @@ const educationEntrySchemaBase = z.object({
     }),
 
   schoolName: optionalTrimmedString(),
-  schoolLocation: optionalTrimmedString(),
   primaryYearCompleted: z.number().int().min(1900).max(2100).optional(),
 
   highSchoolInstitutionName: optionalTrimmedString(),
-  highSchoolBoard: optionalTrimmedString(),
-  highSchoolStream: optionalTrimmedString(),
   highSchoolYearCompleted: z.number().int().min(1900).max(2100).optional(),
-  highSchoolGradeOrPercentage: optionalTrimmedString(),
 
   institutionName: optionalTrimmedString(),
-  universityOrBoard: optionalTrimmedString(),
-  fieldOfStudy: optionalTrimmedString(),
   startYear: z.number().int().min(1900).max(2100).optional(),
   endYear: z.number().int().min(1900).max(2100).optional(),
-  gradeOrCgpa: optionalTrimmedString(),
 });
 
 const educationEntrySchema = educationEntrySchemaBase.superRefine((entry, ctx) => {
@@ -319,13 +312,7 @@ const educationEntrySchema = educationEntrySchemaBase.superRefine((entry, ctx) =
         message: "School name is required for primary education.",
       });
     }
-    if (entry.primaryYearCompleted == null) {
-      ctx.addIssue({
-        path: ["primaryYearCompleted"],
-        code: z.ZodIssueCode.custom,
-        message: "Year completed is required for primary education.",
-      });
-    }
+    // primaryYearCompleted is optional for primary school
   } else if (level === EEducationLevel.HIGH_SCHOOL) {
     if (!entry.highSchoolInstitutionName) {
       ctx.addIssue({
@@ -334,33 +321,22 @@ const educationEntrySchema = educationEntrySchemaBase.superRefine((entry, ctx) =
         message: "Institution name is required for high school.",
       });
     }
-    if (entry.highSchoolYearCompleted == null) {
-      ctx.addIssue({
-        path: ["highSchoolYearCompleted"],
-        code: z.ZodIssueCode.custom,
-        message: "Year completed is required for high school.",
-      });
-    }
+    // highSchoolYearCompleted is optional for high school
   } else {
+    // Diploma / Bachelor / Masters / Doctorate / Other
     if (!entry.institutionName) {
       ctx.addIssue({
         path: ["institutionName"],
         code: z.ZodIssueCode.custom,
-        message: "Institution name is required.",
+        message: "College / University name is required.",
       });
     }
-    if (!entry.fieldOfStudy) {
-      ctx.addIssue({
-        path: ["fieldOfStudy"],
-        code: z.ZodIssueCode.custom,
-        message: "Field of study is required.",
-      });
-    }
+    // startYear is optional
     if (entry.endYear == null) {
       ctx.addIssue({
         path: ["endYear"],
         code: z.ZodIssueCode.custom,
-        message: "End year is required.",
+        message: "Year completed / expected is required.",
       });
     }
   }
@@ -379,41 +355,27 @@ const educationEntrySchema = educationEntrySchemaBase.superRefine((entry, ctx) =
   if (level === EEducationLevel.PRIMARY_SCHOOL) {
     // Disallow high-school + diploma/bachelor+ fields
     disallow(entry.highSchoolInstitutionName, "highSchoolInstitutionName");
-    disallow(entry.highSchoolBoard, "highSchoolBoard");
-    disallow(entry.highSchoolStream, "highSchoolStream");
     disallow(entry.highSchoolYearCompleted, "highSchoolYearCompleted");
-    disallow(entry.highSchoolGradeOrPercentage, "highSchoolGradeOrPercentage");
 
     disallow(entry.institutionName, "institutionName");
-    disallow(entry.universityOrBoard, "universityOrBoard");
-    disallow(entry.fieldOfStudy, "fieldOfStudy");
     disallow(entry.startYear, "startYear");
     disallow(entry.endYear, "endYear");
-    disallow(entry.gradeOrCgpa, "gradeOrCgpa");
   } else if (level === EEducationLevel.HIGH_SCHOOL) {
     // Disallow primary + diploma/bachelor+ fields
     disallow(entry.schoolName, "schoolName");
-    disallow(entry.schoolLocation, "schoolLocation");
     disallow(entry.primaryYearCompleted, "primaryYearCompleted");
 
     disallow(entry.institutionName, "institutionName");
-    disallow(entry.universityOrBoard, "universityOrBoard");
-    disallow(entry.fieldOfStudy, "fieldOfStudy");
     disallow(entry.startYear, "startYear");
     disallow(entry.endYear, "endYear");
-    disallow(entry.gradeOrCgpa, "gradeOrCgpa");
   } else {
     // Diploma / Bachelor / Masters / Doctorate / Other
     // Disallow primary + high-school fields
     disallow(entry.schoolName, "schoolName");
-    disallow(entry.schoolLocation, "schoolLocation");
     disallow(entry.primaryYearCompleted, "primaryYearCompleted");
 
     disallow(entry.highSchoolInstitutionName, "highSchoolInstitutionName");
-    disallow(entry.highSchoolBoard, "highSchoolBoard");
-    disallow(entry.highSchoolStream, "highSchoolStream");
     disallow(entry.highSchoolYearCompleted, "highSchoolYearCompleted");
-    disallow(entry.highSchoolGradeOrPercentage, "highSchoolGradeOrPercentage");
   }
 });
 
