@@ -2,7 +2,6 @@
 
 import type { PDFForm } from "pdf-lib";
 import { EEducationLevel, EGender, type IIndiaOnboardingFormData } from "@/types/onboarding.types";
-
 import { ENptIndiaApplicationFormFields as F, type NptIndiaApplicationFormPayload } from "./npt-india-application-form.types";
 
 type MaybeDate = Date | string | undefined | null;
@@ -38,8 +37,7 @@ function boolFileExists(file?: any | null): boolean {
 
 function digitsOnly(v?: string | null): string {
   const s = safeStr(v);
-  const d = s.replace(/\D+/g, "");
-  return d;
+  return s.replace(/\D+/g, "");
 }
 
 /**
@@ -86,7 +84,7 @@ export function buildNptIndiaApplicationFormPayload(formData: IIndiaOnboardingFo
 
   payload[F.DATE_OF_BIRTH] = fmtDateDMY(p.dateOfBirth);
 
-  // NEW TEMPLATE: proof of age is a text field
+  // proof of age is a text field
   payload[F.PROOF_OF_AGE] = p.canProvideProofOfAge ? "Yes" : "No";
 
   // Residential address
@@ -121,6 +119,7 @@ export function buildNptIndiaApplicationFormPayload(formData: IIndiaOnboardingFo
   payload[F.REFERENCE2_PHONE_AREA] = r2.area;
   payload[F.REFERENCE2_PHONE_REST] = r2.rest;
 
+  // checkbox -> boolean (worker will draw checkmark image)
   payload[F.CONSENT_TO_CONTACT] = !!p.hasConsentToContactReferencesOrEmergencyContact;
 
   // Government IDs
@@ -143,7 +142,7 @@ export function buildNptIndiaApplicationFormPayload(formData: IIndiaOnboardingFo
   payload[F.LICENSE_BACK_ATTACHED] = boolFileExists(g.driversLicense?.backFile);
 
   /* ======================================================================== */
-  /* Page 3: Education (UPDATED: fewer fields)                                 */
+  /* Page 3: Education                                                        */
   /* ======================================================================== */
 
   const level = edu?.highestLevel;
@@ -156,24 +155,20 @@ export function buildNptIndiaApplicationFormPayload(formData: IIndiaOnboardingFo
   payload[F.EDU_DOCTORATE] = level === EEducationLevel.DOCTORATE;
   payload[F.EDU_OTHER] = level === EEducationLevel.OTHER;
 
-  // If OTHER, free text line exists on PDF; your schema currently doesn't store it.
   payload[F.EDU_OTHER_TEXT] = "";
 
-  // Primary School block
   payload[F.PRIMARY_SCHOOL_NAME] = safeStr(edu?.schoolName);
   payload[F.PRIMARY_YEAR_COMPLETED] = fmtYear(edu?.primaryYearCompleted);
 
-  // High School / Secondary block
   payload[F.HIGH_SCHOOL_NAME] = safeStr(edu?.highSchoolInstitutionName);
   payload[F.HIGH_SCHOOL_YEAR_COMPLETED] = fmtYear(edu?.highSchoolYearCompleted);
 
-  // Diploma/Bachelor/Master/Doctorate/Other block (reduced)
   payload[F.COLLEGE_UNIVERSITY_NAME] = safeStr(edu?.institutionName);
   payload[F.START_YEAR] = fmtYear(edu?.startYear);
   payload[F.YEAR_COMPLETED_OR_EXPECTED] = fmtYear(edu?.endYear);
 
   /* ======================================================================== */
-  /* Page 4: Employment History (UPDATED: N/A + Reference Check)               */
+  /* Page 4: Employment History                                               */
   /* ======================================================================== */
 
   const hasPrevEmployment = !!formData.hasPreviousEmployment;
@@ -194,9 +189,8 @@ export function buildNptIndiaApplicationFormPayload(formData: IIndiaOnboardingFo
       certNo: F;
     }
   ) => {
-    const e: any = jobs[idx]; // using any because employerReferenceCheck isn't in onboarding.types.ts yet
+    const e: any = jobs[idx]; // employerReferenceCheck not in onboarding.types.ts yet
 
-    // If overall no previous employment OR this entry missing => mark N/A
     if (!hasPrevEmployment || !e) {
       payload[fields.na] = true;
 
@@ -206,13 +200,10 @@ export function buildNptIndiaApplicationFormPayload(formData: IIndiaOnboardingFo
       payload[fields.end] = "";
       payload[fields.reason] = "";
 
-      // Don't touch these when N/A (avoid redundant "No" marks)
       payload[fields.refYes] = false;
       payload[fields.refNo] = false;
-
       payload[fields.certYes] = false;
       payload[fields.certNo] = false;
-
       return;
     }
 
@@ -224,12 +215,10 @@ export function buildNptIndiaApplicationFormPayload(formData: IIndiaOnboardingFo
     payload[fields.end] = fmtDateDMY(e.endDate);
     payload[fields.reason] = safeStr(e.reasonForLeaving);
 
-    // NEW: employer reference check (boolean)
     const refOk = !!e.employerReferenceCheck;
     payload[fields.refYes] = refOk;
     payload[fields.refNo] = !refOk;
 
-    // Experience certificate photo (yes/no)
     const hasCert = boolFileExists(e.experienceCertificateFile);
     payload[fields.certYes] = hasCert;
     payload[fields.certNo] = !hasCert;
@@ -297,25 +286,16 @@ export function buildNptIndiaApplicationFormPayload(formData: IIndiaOnboardingFo
 
 /* -------------------------------------------------------------------------- */
 /* Apply payload to pdf-lib form                                              */
+/* - strings => setText                                                       */
+/* - booleans => ignored here (worker draws checkmark image)                   */
 /* -------------------------------------------------------------------------- */
 
 export function applyNptIndiaApplicationFormPayloadToForm(form: PDFForm, payload: NptIndiaApplicationFormPayload): void {
   for (const [name, value] of Object.entries(payload)) {
     if (value == null) continue;
+    if (typeof value === "boolean") continue;
 
     try {
-      if (typeof value === "boolean") {
-        try {
-          const cb = form.getCheckBox(name);
-          if (value) cb.check();
-          else cb.uncheck();
-          cb.updateAppearances();
-          continue;
-        } catch {
-          // Not a checkbox; fall through to try text.
-        }
-      }
-
       const tf = form.getTextField(name);
       tf.setText(String(value));
     } catch {
