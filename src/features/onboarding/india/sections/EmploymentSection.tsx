@@ -155,7 +155,7 @@ export function EmploymentSection({
       </div>
 
       {hasPreviousEmployment === false && (
-        <div className="mb-4 rounded-xl border border-dashed border-slate-200 bg-slate-50/60 px-4 py-4 text-xs text-slate-600">
+        <div className="mb-4 rounded-xl border border-dashed border-slate-200 bg-white px-4 py-4 text-xs text-slate-600 dark:border-slate-500 dark:bg-slate-700/50 dark:text-slate-200">
           You indicated that you don&apos;t have previous employment. You can
           still continue your onboarding without adding any roles.
         </div>
