@@ -1,3 +1,5 @@
+// src/workers/applicationFormPdfWorker.ts
+
 import path from "node:path";
 import fs from "node:fs/promises";
 
@@ -6,7 +8,7 @@ import { PassThrough } from "stream";
 import { Upload } from "@aws-sdk/lib-storage";
 import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 
-import { PDFDocument } from "pdf-lib";
+import { PDFDocument, StandardFonts } from "pdf-lib";
 
 import { OnboardingModel } from "@/mongoose/models/Onboarding";
 import { ESubsidiary, EFileMimeType, type IFileAsset } from "@/types/shared.types";
@@ -15,17 +17,16 @@ import { keyJoin } from "@/lib/utils/s3Helper";
 import { S3_TEMP_FOLDER } from "@/constants/aws";
 
 import { buildNptIndiaApplicationFormPayload, applyNptIndiaApplicationFormPayloadToForm } from "@/lib/pdf/application-form/mappers/npt-india-application-form.mapper";
+
 import { ENptIndiaApplicationFormFields as F } from "@/lib/pdf/application-form/mappers/npt-india-application-form.types";
 
 const APP_AWS_BUCKET_NAME = process.env.APP_AWS_BUCKET_NAME!;
 const APP_AWS_REGION = process.env.APP_AWS_REGION!;
 const MONGO_URI = process.env.MONGO_URI!;
-const ENC_KEY = process.env.ENC_KEY!;
 
 if (!APP_AWS_BUCKET_NAME) throw new Error("APP_AWS_BUCKET_NAME is not set");
 if (!APP_AWS_REGION) throw new Error("APP_AWS_REGION is not set");
 if (!MONGO_URI) throw new Error("MONGO_URI is not set");
-if (!ENC_KEY) throw new Error("ENC_KEY is not set");
 
 type JobState = "RUNNING" | "DONE" | "ERROR";
 
@@ -150,7 +151,7 @@ function collectIndiaAttachments(formData: any): Array<{ label: string; asset: I
 
   const push = (label: string, asset?: IFileAsset | null) => {
     if (!asset?.s3Key) return;
-    if (!(isPdfAsset(asset) || isImageAsset(asset))) return; // only PDF/images
+    if (!(isPdfAsset(asset) || isImageAsset(asset))) return;
     out.push({ label, asset });
   };
 
@@ -181,7 +182,6 @@ function fitIntoA4(imgW: number, imgH: number) {
   const pageH = 841.89;
   const margin = 36;
 
-  // If landscape-ish, rotate by swapping intended fit box (still draw without rotate for simplicity)
   const maxW = pageW - margin * 2;
   const maxH = pageH - margin * 2;
 
@@ -256,7 +256,7 @@ export const handler = async (event: any) => {
     const templatePath = path.join(process.cwd(), "templates", "npt-india-application-form-fillable.pdf");
     const templateBytes = await fs.readFile(templatePath);
 
-    // 2) Fill it (your existing mapper)
+    // 2) Fill it
     const filledDoc = await PDFDocument.load(templateBytes);
     const form = filledDoc.getForm();
     const pages = filledDoc.getPages();
@@ -270,19 +270,19 @@ export const handler = async (event: any) => {
       if (sigAsset?.s3Key && isImageAsset(sigAsset)) {
         const sigBytes = await getS3ObjectBytes(sigAsset.s3Key);
 
-        // Re-implement your drawPdfImage inline (avoid importing app-route helpers into Lambda)
-        // Minimal: find the field rect, draw image at that rect.
-        // If you prefer, you can keep using drawPdfImage if it’s lambda-safe.
         const sigField = form.getTextField(F.DECLARATION_SIGNATURE);
         const widgets = sigField.acroField.getWidgets();
         const widget = widgets?.[0];
         const rect = widget?.getRectangle();
-        if (rect) {
+
+        // Declaration is still page 5 in the new template (index 4)
+        const page = pages[4];
+
+        if (rect && page) {
           const { x, y, width, height } = rect;
-          const page = pages[4]; // declaration page
+
           const img = normalizeMime(sigAsset.mimeType) === EFileMimeType.PNG ? await filledDoc.embedPng(sigBytes) : await filledDoc.embedJpg(sigBytes);
 
-          // Fit signature to a reasonable box
           const targetW = Math.min(width, 140);
           const targetH = Math.min(height, 30);
 
@@ -292,6 +292,10 @@ export const handler = async (event: any) => {
     } catch (e) {
       console.warn("Signature draw failed:", e);
     }
+
+    // Force a non-bold appearance for ALL fields
+    const font = await filledDoc.embedFont(StandardFonts.Helvetica);
+    form.updateFieldAppearances(font);
 
     form.flatten();
 
@@ -314,7 +318,7 @@ export const handler = async (event: any) => {
     for (const a of attachments) {
       await appendPdfOrImage(merged, a.asset);
       done++;
-      status.progressPercent = 45 + Math.round((done / total) * 45); // up to ~90
+      status.progressPercent = 45 + Math.round((done / total) * 45);
       await putStatus(jobId, status);
     }
 
