@@ -16,39 +16,41 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_APP_URL ||
-      `http://localhost:${process.env.PORT ?? 3000}`
+      `http://localhost:${process.env.PORT ?? 3000}`,
   ),
-  applicationName: "NPT Onboard",
+  applicationName: "Onboardly",
   title: {
-    default: "NPT Onboard",
-    template: "%s · NPT Onboard",
+    default: "Onboardly",
+    template: "%s · Onboardly",
   },
   description:
-    "Secure employee onboarding platform for NPT subsidiaries. Complete your onboarding, upload required documents, and track your submission status.",
+    "We help organizations welcome employees the right way from their first interaction. Our onboarding platform removes friction from paperwork, compliance, and setup. So teams can focus on people, not processes.",
   icons: {
-    icon: "/assets/logos/NPTlogofavicon.png",
-    shortcut: "/assets/logos/NPTlogofavicon.png",
-    apple: "/assets/logos/NPTlogofavicon.png",
+    icon: "/assets/logos/Logoicon.png",
+    shortcut: "/assets/logos/Logoicon.png",
+    apple: "/assets/logos/Logoicon.png",
   },
   openGraph: {
     type: "website",
-    title: "NPT Onboard",
-    description: "Secure employee onboarding platform for NPT subsidiaries.",
-    siteName: "NPT Onboard",
+    title: "Onboardly",
+    description:
+      "We help organizations welcome employees the right way from their first interaction. Our onboarding platform removes friction from paperwork, compliance, and setup. So teams can focus on people, not processes.",
+    siteName: "Onboardly",
     images: [
       {
-        url: "/assets/logos/NPTlogo.png",
+        url: "/assets/logos/Logo.png",
         width: 512,
         height: 512,
-        alt: "NPT Onboard",
+        alt: "Onboardly",
       },
     ],
   },
   twitter: {
     card: "summary",
-    title: "NPT Onboard",
-    description: "Secure employee onboarding platform for NPT subsidiaries.",
-    images: ["/assets/logos/NPTlogo.png"],
+    title: "Onboardly",
+    description:
+      "We help organizations welcome employees the right way from their first interaction. Our onboarding platform removes friction from paperwork, compliance, and setup. So teams can focus on people, not processes.",
+    images: ["/assets/logos/Logo.png"],
   },
 };
 
