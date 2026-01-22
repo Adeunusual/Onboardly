@@ -1,6 +1,6 @@
-# NPTonboard – Employee Hiring & Onboarding Platform
+# Onboardly – Employee Hiring & Onboarding Platform
 
-**NPTonboard** is a standalone internal application designed to streamline and digitize employee onboarding for **NPT’s global subsidiaries—India, Canada, and the United States.**
+**Onboardly** helps organizations welcome employees the right way from their first interaction. Our onboarding platform removes friction from paperwork, compliance, and setup. So teams can focus on people, not processes.**
 
 Version **1.0** focuses on activating the India onboarding workflow (digital + manual), while the architecture and routing are fully prepared for Canada and US expansion in future versions.
 
@@ -21,7 +21,7 @@ Version **1.0** focuses on activating the India onboarding workflow (digital + m
 
 ## Project Overview
 
-NPTonboard manages onboarding for employees across multiple subsidiaries. The system supports two primary user groups:
+Onboardly manages onboarding for employees across multiple subsidiaries. The system supports two primary user groups:
 
 ### 👤 Employees (Digital Flow)
 
@@ -155,7 +155,7 @@ npm install
 pnpm install
 ```
 
-### 2. Run development server
+### 2. Run the development server
 
 ```bash
 npm run dev
@@ -262,12 +262,6 @@ When HR switches to CA/US in v1:
 
 | Name      | Role                 |
 | --------- | -------------------- |
-| **Parv**  | Team Lead & Designer |
 | **Faruq** | Frontend Engineer    |
 | **Ridoy** | Backend Engineer     |
 
----
-
-## 📄 License
-
-Internal use only — © NPT.
