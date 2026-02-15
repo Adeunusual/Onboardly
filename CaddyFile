@@ -1,7 +1,7 @@
 {
     http_port 8080
 }
-onboarding.nptglobal.lvh.me:4443 {
+onboarding.onboardly.lvh.me:4443 {
     tls internal
     reverse_proxy 127.0.0.1:3001
 }

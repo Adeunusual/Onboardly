@@ -1,7 +1,19 @@
 // src/mongoose/schemas/onboardingSchema.ts
 import { geoLocationSchema } from "./sharedSchemas";
-import { indiaOnboardingFormDataSchema, canadaOnboardingFormDataSchema, usOnboardingFormDataSchema } from "./onboardingFormDataSchemas";
-import { EOnboardingMethod, EOnboardingStatus, ETerminationType, IOnboardingInvite, IOnboardingOtp, TOnboarding, TOnboardingDoc } from "@/types/onboarding.types";
+import {
+  indiaOnboardingFormDataSchema,
+  canadaOnboardingFormDataSchema,
+  usOnboardingFormDataSchema,
+} from "./onboardingFormDataSchemas";
+import {
+  EOnboardingMethod,
+  EOnboardingStatus,
+  ETerminationType,
+  IOnboardingInvite,
+  IOnboardingOtp,
+  TOnboarding,
+  TOnboardingDoc,
+} from "@/types/onboarding.types";
 import { ESubsidiary } from "@/types/shared.types";
 import { Schema } from "mongoose";
 
@@ -12,7 +24,7 @@ const onboardingInviteSchema = new Schema<IOnboardingInvite>(
     expiresAt: { type: Date, required: true },
     lastSentAt: { type: Date, required: true },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const onboardingOtpSchema = new Schema<IOnboardingOtp>(
@@ -23,7 +35,7 @@ const onboardingOtpSchema = new Schema<IOnboardingOtp>(
     lockedAt: { type: Date },
     lastSentAt: { type: Date, required: true },
   },
-  { _id: false }
+  { _id: false },
 );
 
 export const onboardingSchema = new Schema<TOnboarding>(
@@ -95,6 +107,10 @@ export const onboardingSchema = new Schema<TOnboarding>(
     completedAt: { type: Date },
     approvedAt: { type: Date },
     terminatedAt: { type: Date },
+    lastStatusBeforeTermination: {
+      type: String,
+      enum: Object.values(EOnboardingStatus),
+    },
 
     // per-subsidiary formData fields
     indiaFormData: { type: indiaOnboardingFormDataSchema, required: false },
@@ -105,7 +121,7 @@ export const onboardingSchema = new Schema<TOnboarding>(
     timestamps: { createdAt: "createdAt", updatedAt: "updatedAt" },
     toJSON: { virtuals: true, getters: true },
     toObject: { virtuals: true, getters: true },
-  }
+  },
 );
 
 // per-subsidiary uniqueness of employeeNumber
@@ -116,7 +132,7 @@ onboardingSchema.index(
     partialFilterExpression: {
       employeeNumber: { $type: "string" },
     },
-  }
+  },
 );
 
 /* -------------------------------------------------------------------------- */
@@ -145,20 +161,29 @@ onboardingSchema.index({ subsidiary: 1, email: 1 });
 // Validate presence of per-subsidiary formData *only when status requires it*
 onboardingSchema.pre<TOnboardingDoc>("save", function () {
   // Decide in which statuses full formData must be present.
-  const requiresFormData = this.status === EOnboardingStatus.Submitted || this.status === EOnboardingStatus.Resubmitted || this.status === EOnboardingStatus.Approved;
+  const requiresFormData =
+    this.status === EOnboardingStatus.Submitted ||
+    this.status === EOnboardingStatus.Resubmitted ||
+    this.status === EOnboardingStatus.Approved;
 
   // If not in a “form should exist” state, don’t enforce anything.
   if (!requiresFormData) return;
 
   if (this.subsidiary === ESubsidiary.INDIA && !this.indiaFormData) {
-    throw new Error("indiaFormData is required for INDIA subsidiary when onboarding is submitted/approved");
+    throw new Error(
+      "indiaFormData is required for INDIA subsidiary when onboarding is submitted/approved",
+    );
   }
 
   if (this.subsidiary === ESubsidiary.CANADA && !this.canadaFormData) {
-    throw new Error("canadaFormData is required for CANADA subsidiary when onboarding is submitted/approved");
+    throw new Error(
+      "canadaFormData is required for CANADA subsidiary when onboarding is submitted/approved",
+    );
   }
 
   if (this.subsidiary === ESubsidiary.USA && !this.usFormData) {
-    throw new Error("usFormData is required for USA subsidiary when onboarding is submitted/approved");
+    throw new Error(
+      "usFormData is required for USA subsidiary when onboarding is submitted/approved",
+    );
   }
 });

@@ -1,74 +1,49 @@
 // src/lib/mail/mailer.ts
-import { ClientSecretCredential } from "@azure/identity";
-import { AZURE_AD_CLIENT_ID, AZURE_AD_CLIENT_SECRET, AZURE_AD_TENANT_ID } from "@/config/env";
+import { ONBOARDLY_HR_EMAIL, ONBOARDLY_HR_APP_PASSWORD } from "@/config/env";
+import type { MailAttachment } from "./mailers/types";
+import { sendMailSmtpGmail } from "./mailers/smtpMailer";
+// If you want to switch back later, just swap the import + call to graphMailer.
+// import { sendMailGraphAppOnly } from "./mailers/graphMailer";
 
-const GRAPH_SCOPE = "https://graph.microsoft.com/.default";
-const GRAPH_BASE = "https://graph.microsoft.com/v1.0";
-
-const credential = new ClientSecretCredential(AZURE_AD_TENANT_ID, AZURE_AD_CLIENT_ID, AZURE_AD_CLIENT_SECRET);
-
-async function getAccessToken(): Promise<string> {
-  const token = await credential.getToken(GRAPH_SCOPE);
-  if (!token?.token) throw new Error("Failed to obtain Graph token");
-  return token.token;
-}
-
-export type GraphAttachment = {
-  name: string; // e.g., "ssp-email-banner.jpg"
-  contentType: string; // e.g., "image/jpeg", "application/pdf"
-  base64: string; // contentBytes (base64 without data: prefix)
-  /** If provided with isInline=true, enables <img src="cid:..."> */
-  contentId?: string; // e.g., "ssp-email-banner"
-  isInline?: boolean; // true for inline (CID) images
-};
+export type GraphAttachment = MailAttachment; // keep your existing name working
 
 export async function sendMailAppOnly(params: {
-  from: string; // mailbox to send as
-  to: string[]; // recipients
+  from: string;
+  to: string[];
   subject: string;
   html?: string;
   text?: string;
   attachments?: GraphAttachment[];
-  saveToSentItems?: boolean;
+  saveToSentItems?: boolean; // unused for SMTP, kept for compatibility
 }) {
-  const accessToken = await getAccessToken();
+  // SMTP version (current)
+  if (!ONBOARDLY_HR_EMAIL) throw new Error("ONBOARDLY_HR_EMAIL is required");
+  if (!ONBOARDLY_HR_APP_PASSWORD)
+    throw new Error("ONBOARDLY_HR_APP_PASSWORD is required");
 
-  const toRecipients = params.to.map((addr) => ({ emailAddress: { address: addr } }));
+  // You can choose to force `from` to be the HR email:
+  // const from = ONBOARDLY_HR_EMAIL;
+  // Or allow callers to pass it (your code passes ONBOARDLY_HR_EMAIL already):
+  const from = params.from;
 
-  const message: any = {
+  await sendMailSmtpGmail({
+    from,
+    appPassword: ONBOARDLY_HR_APP_PASSWORD,
+    to: params.to,
     subject: params.subject,
-    body: {
-      contentType: params.html ? "HTML" : "Text",
-      content: params.html ?? params.text ?? "",
-    },
-    toRecipients,
-  };
-
-  if (params.attachments?.length) {
-    message.attachments = params.attachments.map((a) => ({
-      "@odata.type": "#microsoft.graph.fileAttachment",
-      name: a.name,
-      contentType: a.contentType,
-      contentBytes: a.base64,
-      ...(a.contentId ? { contentId: a.contentId } : {}),
-      ...(a.isInline ? { isInline: true } : {}),
-    }));
-  }
-
-  const res = await fetch(`${GRAPH_BASE}/users/${encodeURIComponent(params.from)}/sendMail`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      message,
-      saveToSentItems: params.saveToSentItems ?? true,
-    }),
+    html: params.html,
+    text: params.text,
+    attachments: params.attachments,
   });
 
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`sendMail failed: ${res.status} ${text}`);
-  }
+  // Graph version (switch-back later)
+  // await sendMailGraphAppOnly({
+  //   from,
+  //   to: params.to,
+  //   subject: params.subject,
+  //   html: params.html,
+  //   text: params.text,
+  //   attachments: params.attachments,
+  //   saveToSentItems: params.saveToSentItems,
+  // });
 }

@@ -14,7 +14,7 @@ import { ApiError } from "@/lib/api/client";
 import { ESubsidiary } from "@/types/shared.types";
 import { OtpErrorBanner } from "./OtpErrorBanner";
 import { OtpInput } from "./OtpInput";
-import { NEXT_PUBLIC_NPT_HR_EMAIL } from "@/config/publicEnv";
+import { NEXT_PUBLIC_ONBOARDLY_HR_EMAIL } from "@/config/publicEnv";
 
 type OtpStep = "idle" | "sending" | "code-sent" | "verifying" | "verified";
 
@@ -256,10 +256,10 @@ export const OtpModal: React.FC<OtpModalProps> = ({
         If you believe you received this email in error, please contact HR{" "}
         directly @{" "}
         <a
-          href={`mailto:${NEXT_PUBLIC_NPT_HR_EMAIL}`}
+          href={`mailto:${NEXT_PUBLIC_ONBOARDLY_HR_EMAIL}`}
           className="underline underline-offset-2 hover:text-slate-500"
         >
-          {NEXT_PUBLIC_NPT_HR_EMAIL}
+          {NEXT_PUBLIC_ONBOARDLY_HR_EMAIL}
         </a>
       </p>
     </Modal>

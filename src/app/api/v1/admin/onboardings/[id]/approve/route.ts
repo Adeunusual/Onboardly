@@ -1,3 +1,4 @@
+// src/app/api/v1/admin/onboardings/[id]/approve/route.ts
 import { NextRequest } from "next/server";
 import connectDB from "@/lib/utils/connectDB";
 import { errorResponse, successResponse } from "@/lib/utils/apiResponse";

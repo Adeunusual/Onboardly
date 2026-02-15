@@ -19,7 +19,7 @@ interface AppJWT {
 // Dummy admin user used when auth is disabled
 const DUMMY_ADMIN_USER: IUser = {
   id: "dev-admin",
-  email: "dev-admin@npt.local",
+  email: "dev-admin@onboardly.local",
   name: "Dev Admin",
   picture: undefined,
 };

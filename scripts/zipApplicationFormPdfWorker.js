@@ -8,9 +8,14 @@ const BUILD_DIR = path.resolve(".lambda-build");
 const WORKER_JS = path.join(BUILD_DIR, "worker.js");
 
 // template
-const TEMPLATE_SRC = path.resolve("src/lib/pdf/application-form/templates/npt-india-application-form-fillable.pdf");
+const TEMPLATE_SRC = path.resolve(
+  "src/lib/pdf/application-form/templates/onboardly-default-application-form-fillable.pdf",
+);
 const TEMPLATE_DIR = path.join(BUILD_DIR, "templates");
-const TEMPLATE_DST = path.join(TEMPLATE_DIR, "npt-india-application-form-fillable.pdf");
+const TEMPLATE_DST = path.join(
+  TEMPLATE_DIR,
+  "onboardly-default-application-form-fillable.pdf",
+);
 
 // font
 const FONT_SRC = path.resolve("public/assets/fonts/inter-regular.ttf");
@@ -36,7 +41,9 @@ function main() {
   } catch {}
 
   // build worker into .lambda-build/worker.js
-  run("npx esbuild src/workers/applicationFormPdfWorker.ts --bundle --platform=node --target=node20 --minify --legal-comments=none --outfile=.lambda-build/worker.js");
+  run(
+    "npx esbuild src/workers/applicationFormPdfWorker.ts --bundle --platform=node --target=node20 --minify --legal-comments=none --outfile=.lambda-build/worker.js",
+  );
 
   // stage template into .lambda-build/templates/...
   fs.mkdirSync(TEMPLATE_DIR, { recursive: true });
@@ -51,7 +58,10 @@ function main() {
   fs.copyFileSync(ICON_SRC, ICON_DST);
 
   // zip from inside .lambda-build so paths are correct
-  run(`npx bestzip ${ZIP_NAME} worker.js templates/npt-india-application-form-fillable.pdf fonts/inter-regular.ttf icons/check-mark.png`, { cwd: BUILD_DIR });
+  run(
+    `npx bestzip ${ZIP_NAME} worker.js templates/onboardly-default-application-form-fillable.pdf fonts/inter-regular.ttf icons/check-mark.png`,
+    { cwd: BUILD_DIR },
+  );
 
   // cleanup staging artifacts (leave only the zip)
   try {

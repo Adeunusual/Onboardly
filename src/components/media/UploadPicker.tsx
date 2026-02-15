@@ -20,7 +20,7 @@ type UploadPickerProps = {
   showPdfGuidance?: boolean;
 };
 
-const PDF_GUIDANCE_STORAGE_KEY = "nptonboard_pdf_guidance_disabled";
+const PDF_GUIDANCE_STORAGE_KEY = "onboardly_pdf_guidance_disabled";
 
 type Platform = "ios" | "android" | "other";
 
@@ -146,96 +146,101 @@ function PdfGuidanceModal({
   }, []);
 
   return (
-    <Modal open={true} onClose={onClose} ariaLabel="PDF upload guidance" className="max-w-md">
+    <Modal
+      open={true}
+      onClose={onClose}
+      ariaLabel="PDF upload guidance"
+      className="max-w-md"
+    >
       <h2 id={titleId} className="text-lg font-semibold text-slate-900">
-          Use a clear PDF scan
-        </h2>
+        Use a clear PDF scan
+      </h2>
 
-        <p className="mt-3 text-sm text-slate-700 leading-5">
-          For security checks and document processing, we can only accept{" "}
-          <span className="font-semibold">PDF files</span> with clear, readable
-          scans. Please avoid photos with glare, shadows, or background clutter.
+      <p className="mt-3 text-sm text-slate-700 leading-5">
+        For security checks and document processing, we can only accept{" "}
+        <span className="font-semibold">PDF files</span> with clear, readable
+        scans. Please avoid photos with glare, shadows, or background clutter.
+      </p>
+      <p className="mt-3 text-sm text-slate-700 leading-5">
+        You'll see this reminder when uploading documents on other file fields
+        as well. You can turn it off below if you don't need to be reminded
+        again.
+      </p>
+
+      <div className="mt-4 space-y-2 text-sm text-slate-700">
+        <p className="font-medium">
+          You can use any phone scanner app, for example:
         </p>
-        <p className="mt-3 text-sm text-slate-700 leading-5">
-          You'll see this reminder when uploading documents on other file fields
-          as well. You can turn it off below if you don't need to be reminded
-          again.
-        </p>
+        <ul className="list-disc list-inside space-y-1">
+          <li>CamScanner (recommended)</li>
+          <li>Apple Notes → Scan Document (iPhone)</li>
+          <li>Your phone&apos;s built-in "Scan" option in Files or Camera</li>
+        </ul>
+      </div>
 
-        <div className="mt-4 space-y-2 text-sm text-slate-700">
-          <p className="font-medium">
-            You can use any phone scanner app, for example:
-          </p>
-          <ul className="list-disc list-inside space-y-1">
-            <li>CamScanner (recommended)</li>
-            <li>Apple Notes → Scan Document (iPhone)</li>
-            <li>Your phone&apos;s built-in "Scan" option in Files or Camera</li>
-          </ul>
-        </div>
-
-        {/* Store badges — platform aware (Drivedock parity) */}
-        <div className="flex items-center justify-center gap-4 mt-4">
-          {(platform === "ios" || platform === "other") && (
-            <a
-              href="https://apps.apple.com/ca/app/camscanner-pdf-scanner-app/id388627783"
-              target="_blank"
-              rel="noreferrer"
-            >
-              <Image
-                src="/assets/logos/Applestore.png"
-                alt="Download on the App Store"
-                className="h-12 w-auto hover:opacity-90 transition"
-                width={0}
-                height={0}
-                sizes="100vw"
-              />
-            </a>
-          )}
-
-          {(platform === "android" || platform === "other") && (
-            <a
-              href="https://play.google.com/store/apps/details?id=com.intsig.camscanner"
-              target="_blank"
-              rel="noreferrer"
-            >
-              <Image
-                src="/assets/logos/Playstore.png"
-                alt="Get it on Google Play"
-                className="h-12 w-auto hover:opacity-90 transition"
-                width={0}
-                height={0}
-                sizes="100vw"
-              />
-            </a>
-          )}
-        </div>
-
-        <label className="mt-4 flex items-center gap-2 text-xs text-slate-600">
-          <input
-            type="checkbox"
-            className="rounded border-slate-300"
-            checked={dontShowAgain}
-            onChange={(e) => setDontShowAgain(e.target.checked)}
-          />
-          Don&apos;t show this reminder again on this device.
-        </label>
-
-        <div className="mt-5 flex justify-between gap-3">
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-3 py-1.5 text-sm text-slate-600 hover:text-slate-800"
+      {/* Store badges — platform aware (Drivedock parity) */}
+      <div className="flex items-center justify-center gap-4 mt-4">
+        {(platform === "ios" || platform === "other") && (
+          <a
+            href="https://apps.apple.com/ca/app/camscanner-pdf-scanner-app/id388627783"
+            target="_blank"
+            rel="noreferrer"
           >
-            Cancel
-          </button>
-          <button
-            type="button"
-            onClick={() => onContinue(dontShowAgain)}
-            className="px-4 py-1.5 text-sm font-medium rounded-lg bg-slate-900 text-white hover:bg-slate-800"
+            <Image
+              src="/assets/logos/Applestore.png"
+              alt="Download on the App Store"
+              className="h-12 w-auto hover:opacity-90 transition"
+              width={0}
+              height={0}
+              sizes="100vw"
+            />
+          </a>
+        )}
+
+        {(platform === "android" || platform === "other") && (
+          <a
+            href="https://play.google.com/store/apps/details?id=com.intsig.camscanner"
+            target="_blank"
+            rel="noreferrer"
           >
-            Continue to upload PDF
-          </button>
-        </div>
+            <Image
+              src="/assets/logos/Playstore.png"
+              alt="Get it on Google Play"
+              className="h-12 w-auto hover:opacity-90 transition"
+              width={0}
+              height={0}
+              sizes="100vw"
+            />
+          </a>
+        )}
+      </div>
+
+      <label className="mt-4 flex items-center gap-2 text-xs text-slate-600">
+        <input
+          type="checkbox"
+          className="rounded border-slate-300"
+          checked={dontShowAgain}
+          onChange={(e) => setDontShowAgain(e.target.checked)}
+        />
+        Don&apos;t show this reminder again on this device.
+      </label>
+
+      <div className="mt-5 flex justify-between gap-3">
+        <button
+          type="button"
+          onClick={onClose}
+          className="px-3 py-1.5 text-sm text-slate-600 hover:text-slate-800"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          onClick={() => onContinue(dontShowAgain)}
+          className="px-4 py-1.5 text-sm font-medium rounded-lg bg-slate-900 text-white hover:bg-slate-800"
+        >
+          Continue to upload PDF
+        </button>
+      </div>
     </Modal>
   );
 }

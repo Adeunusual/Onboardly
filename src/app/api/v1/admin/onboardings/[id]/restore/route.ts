@@ -1,3 +1,4 @@
+// src/app/api/v1/admin/onboardings/[id]/restore/route.ts
 import { NextRequest } from "next/server";
 import connectDB from "@/lib/utils/connectDB";
 import { errorResponse, successResponse } from "@/lib/utils/apiResponse";
@@ -6,7 +7,10 @@ import { guard } from "@/lib/utils/auth/authUtils";
 import { OnboardingModel } from "@/mongoose/models/Onboarding";
 
 import { EOnboardingMethod, EOnboardingStatus } from "@/types/onboarding.types";
-import { EOnboardingActor, EOnboardingAuditAction } from "@/types/onboardingAuditLog.types";
+import {
+  EOnboardingActor,
+  EOnboardingAuditAction,
+} from "@/types/onboardingAuditLog.types";
 import { createOnboardingAuditLogSafe } from "@/lib/utils/onboardingUtils";
 
 /**
@@ -44,7 +48,10 @@ function inferRestoreStatus(onboarding: any): EOnboardingStatus {
  * - Status is inferred from existing timestamps/method.
  * - Does NOT regenerate invites or emails; HR can explicitly resend if needed.
  */
-export const POST = async (_req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
+export const POST = async (
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) => {
   try {
     await connectDB();
     const user = await guard();
@@ -65,10 +72,12 @@ export const POST = async (_req: NextRequest, { params }: { params: Promise<{ id
     const prevTerminationReason = onboarding.terminationReason;
     const prevTerminatedAt = onboarding.terminatedAt;
 
-    const newStatus = inferRestoreStatus(onboarding);
+    const newStatus =
+      onboarding.lastStatusBeforeTermination ?? inferRestoreStatus(onboarding);
     const now = new Date();
 
     onboarding.status = newStatus;
+    onboarding.lastStatusBeforeTermination = undefined;
     onboarding.terminationType = undefined;
     onboarding.terminationReason = undefined;
     onboarding.terminatedAt = undefined;

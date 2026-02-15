@@ -1,14 +1,17 @@
 // src/config/env.ts
 export const MONGO_URI = process.env.MONGO_URI!;
-export const INVITATION_EXPIRES_AT_IN_MILSEC = process.env.INVITATION_EXPIRES_AT_IN_MILSEC!;
+export const INVITATION_EXPIRES_AT_IN_MILSEC =
+  process.env.INVITATION_EXPIRES_AT_IN_MILSEC!;
 export const HASH_SECRET = process.env.HASH_SECRET!;
 export const ENC_KEY = process.env.ENC_KEY!;
 export const APP_AWS_BUCKET_NAME = process.env.APP_AWS_BUCKET_NAME!;
 export const APP_AWS_REGION = process.env.APP_AWS_REGION!;
 export const APP_AWS_ACCESS_KEY_ID = process.env.APP_AWS_ACCESS_KEY_ID!;
 export const APP_AWS_SECRET_ACCESS_KEY = process.env.APP_AWS_SECRET_ACCESS_KEY!;
-export const ONBOARDINGS_REPORTS_LAMBDA_NAME = process.env.ONBOARDINGS_REPORTS_LAMBDA_NAME!;
-export const APPLICATION_FORM_PDF_LAMBDA_NAME = process.env.APPLICATION_FORM_PDF_LAMBDA_NAME!;
+export const ONBOARDINGS_REPORTS_LAMBDA_NAME =
+  process.env.ONBOARDINGS_REPORTS_LAMBDA_NAME!;
+export const APPLICATION_FORM_PDF_LAMBDA_NAME =
+  process.env.APPLICATION_FORM_PDF_LAMBDA_NAME!;
 export const NEXT_IMAGE_DOMAINS = process.env.NEXT_IMAGE_DOMAINS!;
 export const CRON_SECRET = process.env.CRON_SECRET!;
 export const AUTH_COOKIE_NAME = process.env.AUTH_COOKIE_NAME! || "";
@@ -17,10 +20,13 @@ export const ADMIN_EMAILS = process.env.ADMIN_EMAILS!;
 export const isProd = process.env.NODE_ENV === "production";
 export const PORT = process.env.PORT! ?? 3000;
 export const DISABLE_AUTH = process.env.DISABLE_AUTH === "true";
-export const ONBOARDING_SESSION_COOKIE_NAME = process.env.ONBOARDING_SESSION_COOKIE_NAME!;
+export const ONBOARDING_SESSION_COOKIE_NAME =
+  process.env.ONBOARDING_SESSION_COOKIE_NAME!;
 export const AZURE_AD_CLIENT_ID = process.env.AZURE_AD_CLIENT_ID!;
 export const AZURE_AD_CLIENT_SECRET = process.env.AZURE_AD_CLIENT_SECRET!;
 export const AZURE_AD_TENANT_ID = process.env.AZURE_AD_TENANT_ID!;
-export const NPT_HR_EMAIL = process.env.NPT_HR_EMAIL!;
-export const NEXT_PUBLIC_TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!;
+export const ONBOARDLY_HR_EMAIL = process.env.ONBOARDLY_HR_EMAIL!;
+export const ONBOARDLY_HR_APP_PASSWORD = process.env.ONBOARDLY_HR_APP_PASSWORD!;
+export const NEXT_PUBLIC_TURNSTILE_SITE_KEY =
+  process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!;
 export const TURNSTILE_SECRET_KEY = process.env.TURNSTILE_SECRET_KEY!;

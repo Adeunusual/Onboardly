@@ -1,8 +1,9 @@
+// src/lib/mail/employee/sendEmployeeOnboardingInvitation.ts
 import { EOnboardingMethod } from "@/types/onboarding.types";
 import { ESubsidiary } from "@/types/shared.types";
 import { sendMailAppOnly, type GraphAttachment } from "@/lib/mail/mailer";
 import { escapeHtml } from "@/lib/mail/utils";
-import { NPT_HR_EMAIL } from "@/config/env";
+import { ONBOARDLY_HR_EMAIL } from "@/config/env";
 import { buildEmployeeEmailLayout } from "@/lib/mail/templates/buildEmployeeEmailLayout";
 
 export type SendEmployeeOnboardingInvitationParams = {
@@ -18,8 +19,19 @@ export type SendEmployeeOnboardingInvitationParams = {
   manualFormAttachment?: GraphAttachment;
 };
 
-export async function sendEmployeeOnboardingInvitation(params: SendEmployeeOnboardingInvitationParams): Promise<void> {
-  const { to, firstName, lastName, method, subsidiary, baseUrl, inviteToken, manualFormAttachment } = params;
+export async function sendEmployeeOnboardingInvitation(
+  params: SendEmployeeOnboardingInvitationParams,
+): Promise<void> {
+  const {
+    to,
+    firstName,
+    lastName,
+    method,
+    subsidiary,
+    baseUrl,
+    inviteToken,
+    manualFormAttachment,
+  } = params;
 
   const fullName = `${firstName} ${lastName}`.trim();
   const escapedName = escapeHtml(fullName || "there");
@@ -80,12 +92,14 @@ export async function sendEmployeeOnboardingInvitation(params: SendEmployeeOnboa
       heading: "You're invited to complete your onboarding",
       subtitle: `NPT (${escapedSubsidiary})`,
       bodyHtml,
-      footerContactEmail: NPT_HR_EMAIL,
+      footerContactEmail: ONBOARDLY_HR_EMAIL,
     });
   } else {
     // MANUAL flow
     if (!manualFormAttachment) {
-      throw new Error("manualFormAttachment is required for manual onboarding emails");
+      throw new Error(
+        "manualFormAttachment is required for manual onboarding emails",
+      );
     }
 
     attachments.push(manualFormAttachment);
@@ -159,13 +173,14 @@ export async function sendEmployeeOnboardingInvitation(params: SendEmployeeOnboa
       heading: "Your onboarding form is attached",
       subtitle: `NPT (${escapedSubsidiary})`,
       bodyHtml,
-      footerContactEmail: NPT_HR_EMAIL,
-      footerNote: "Please ensure you include all required documents and a PNG signature file.",
+      footerContactEmail: ONBOARDLY_HR_EMAIL,
+      footerNote:
+        "Please ensure you include all required documents and a PNG signature file.",
     });
   }
 
   await sendMailAppOnly({
-    from: NPT_HR_EMAIL,
+    from: ONBOARDLY_HR_EMAIL,
     to: [to],
     subject,
     html,

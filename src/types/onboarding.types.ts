@@ -1,7 +1,11 @@
 // src/types/onboarding.types.ts
 
 import type { HydratedDocument } from "mongoose";
-import type { IFileAsset, IGeoLocation, IResidentialAddress } from "./shared.types";
+import type {
+  IFileAsset,
+  IGeoLocation,
+  IResidentialAddress,
+} from "./shared.types";
 import { ESubsidiary } from "./shared.types";
 
 /**
@@ -24,6 +28,8 @@ export enum EOnboardingStatus {
   ModificationRequested = "ModificationRequested",
   Submitted = "Submitted",
   Resubmitted = "Resubmitted",
+
+  // Terminal
   Approved = "Approved",
   Terminated = "Terminated",
 }
@@ -169,13 +175,15 @@ export interface IIndiaPanCardDocument extends IFileDocumentBase {
   // future PAN-specific fields go here
 }
 
-export interface IIndiaPassportDocument extends IFrontBackDocumentBase, IDocumentWithIssueExpiry {
+export interface IIndiaPassportDocument
+  extends IFrontBackDocumentBase, IDocumentWithIssueExpiry {
   passportNumber: string;
   frontFile: IFileAsset;
   backFile: IFileAsset;
 }
 
-export interface IIndiaDriversLicenseDocument extends IFrontBackDocumentBase, IDocumentWithIssueExpiry {
+export interface IIndiaDriversLicenseDocument
+  extends IFrontBackDocumentBase, IDocumentWithIssueExpiry {
   licenseNumber: string;
   frontFile: IFileAsset;
   backFile: IFileAsset;
@@ -213,7 +221,8 @@ export interface ICanadaSinCardDocument extends IFileDocumentBase {
   // future SIN-card-specific fields go here
 }
 
-export interface ICanadaPassportDocument extends IFrontBackDocumentBase, IDocumentWithIssueExpiry {
+export interface ICanadaPassportDocument
+  extends IFrontBackDocumentBase, IDocumentWithIssueExpiry {
   passportNumber: string;
   frontFile: IFileAsset;
   backFile: IFileAsset;
@@ -227,7 +236,8 @@ export interface ICanadaWorkPermitDocument extends IFileDocumentBase {
   // future work-permit-specific fields go here
 }
 
-export interface ICanadaDriversLicenseDocument extends IFrontBackDocumentBase, IDocumentWithIssueExpiry {
+export interface ICanadaDriversLicenseDocument
+  extends IFrontBackDocumentBase, IDocumentWithIssueExpiry {
   licenseNumber: string;
   frontFile: IFileAsset;
   backFile: IFileAsset;
@@ -266,7 +276,8 @@ export interface IUsSsnCardDocument extends IFileDocumentBase {
   // future SSN-card-specific fields go here
 }
 
-export interface IUsPassportDocument extends IFrontBackDocumentBase, IDocumentWithIssueExpiry {
+export interface IUsPassportDocument
+  extends IFrontBackDocumentBase, IDocumentWithIssueExpiry {
   passportNumber: string;
   frontFile: IFileAsset;
   backFile: IFileAsset;
@@ -280,7 +291,8 @@ export interface IUsWorkPermitDocument extends IFileDocumentBase {
   // future work-permit-specific fields go here
 }
 
-export interface IUsDriversLicenseDocument extends IFrontBackDocumentBase, IDocumentWithIssueExpiry {
+export interface IUsDriversLicenseDocument
+  extends IFrontBackDocumentBase, IDocumentWithIssueExpiry {
   licenseNumber: string;
   frontFile: IFileAsset;
   backFile: IFileAsset;
@@ -394,7 +406,10 @@ export interface IUsOnboardingFormData {
 /**
  * Convenience union for form data; use along with subsidiary discrimination.
  */
-export type TOnboardingFormData = IIndiaOnboardingFormData | ICanadaOnboardingFormData | IUsOnboardingFormData;
+export type TOnboardingFormData =
+  | IIndiaOnboardingFormData
+  | ICanadaOnboardingFormData
+  | IUsOnboardingFormData;
 
 /* ------------------------------------------------------------------ */
 /* Root Onboarding entity                                             */
@@ -434,6 +449,7 @@ export interface IOnboardingBase {
   completedAt?: Date | string;
   approvedAt?: Date | string;
   terminatedAt?: Date | string;
+  lastStatusBeforeTermination?: EOnboardingStatus; // status right before setting Terminated
 }
 
 /**
@@ -524,4 +540,7 @@ export interface IUsOnboardingContext extends IOnboardingContextBase {
 /**
  * Union of all employee-facing onboarding contexts.
  */
-export type TOnboardingContext = IIndiaOnboardingContext | ICanadaOnboardingContext | IUsOnboardingContext;
+export type TOnboardingContext =
+  | IIndiaOnboardingContext
+  | ICanadaOnboardingContext
+  | IUsOnboardingContext;

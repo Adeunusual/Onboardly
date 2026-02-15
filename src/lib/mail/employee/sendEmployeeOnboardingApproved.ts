@@ -1,7 +1,8 @@
+// src/lib/mail/employee/sendEmployeeOnboardingApproved.ts
 import { ESubsidiary } from "@/types/shared.types";
 import { sendMailAppOnly } from "@/lib/mail/mailer";
 import { escapeHtml } from "@/lib/mail/utils";
-import { NPT_HR_EMAIL } from "@/config/env";
+import { ONBOARDLY_HR_EMAIL } from "@/config/env";
 import { buildEmployeeEmailLayout } from "@/lib/mail/templates/buildEmployeeEmailLayout";
 
 export type SendEmployeeOnboardingApprovedParams = {
@@ -13,13 +14,17 @@ export type SendEmployeeOnboardingApprovedParams = {
   employeeNumber?: string;
 };
 
-export async function sendEmployeeOnboardingApproved(params: SendEmployeeOnboardingApprovedParams): Promise<void> {
+export async function sendEmployeeOnboardingApproved(
+  params: SendEmployeeOnboardingApprovedParams,
+): Promise<void> {
   const { to, firstName, lastName, subsidiary, employeeNumber } = params;
 
   const fullName = `${firstName} ${lastName}`.trim();
   const escapedName = escapeHtml(fullName || "there");
   const escapedSubsidiary = escapeHtml(subsidiary);
-  const escapedEmployeeNumber = employeeNumber ? escapeHtml(employeeNumber) : undefined;
+  const escapedEmployeeNumber = employeeNumber
+    ? escapeHtml(employeeNumber)
+    : undefined;
 
   const subject = "NPT Employee Onboarding – Approved";
 
@@ -51,11 +56,11 @@ export async function sendEmployeeOnboardingApproved(params: SendEmployeeOnboard
     heading: "Your onboarding is approved",
     subtitle: `NPT (${escapedSubsidiary})`,
     bodyHtml,
-    footerContactEmail: NPT_HR_EMAIL,
+    footerContactEmail: ONBOARDLY_HR_EMAIL,
   });
 
   await sendMailAppOnly({
-    from: NPT_HR_EMAIL,
+    from: ONBOARDLY_HR_EMAIL,
     to: [to],
     subject,
     html,

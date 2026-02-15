@@ -1,8 +1,9 @@
+// src/lib/mail/employee/sendEmployeeOnboardingTerminationNotice.ts
 import { ESubsidiary } from "@/types/shared.types";
 import { ETerminationType } from "@/types/onboarding.types";
 import { sendMailAppOnly } from "@/lib/mail/mailer";
 import { escapeHtml } from "@/lib/mail/utils";
-import { NPT_HR_EMAIL } from "@/config/env";
+import { ONBOARDLY_HR_EMAIL } from "@/config/env";
 import { buildEmployeeEmailLayout } from "@/lib/mail/templates/buildEmployeeEmailLayout";
 
 export type SendEmployeeOnboardingTerminationNoticeParams = {
@@ -15,14 +16,25 @@ export type SendEmployeeOnboardingTerminationNoticeParams = {
   terminationReason?: string;
 };
 
-export async function sendEmployeeOnboardingTerminationNotice(params: SendEmployeeOnboardingTerminationNoticeParams): Promise<void> {
-  const { to, firstName, lastName, subsidiary, terminationType, terminationReason } = params;
+export async function sendEmployeeOnboardingTerminationNotice(
+  params: SendEmployeeOnboardingTerminationNoticeParams,
+): Promise<void> {
+  const {
+    to,
+    firstName,
+    lastName,
+    subsidiary,
+    terminationType,
+    terminationReason,
+  } = params;
 
   const fullName = `${firstName} ${lastName}`.trim();
   const escapedName = escapeHtml(fullName || "there");
   const escapedSubsidiary = escapeHtml(subsidiary);
   const escapedTerminationType = escapeHtml(terminationType);
-  const escapedReason = terminationReason ? escapeHtml(terminationReason).replace(/\r?\n/g, "<br/>") : undefined;
+  const escapedReason = terminationReason
+    ? escapeHtml(terminationReason).replace(/\r?\n/g, "<br/>")
+    : undefined;
 
   const subject = "NPT Employee Onboarding – Status Update";
 
@@ -55,11 +67,11 @@ export async function sendEmployeeOnboardingTerminationNotice(params: SendEmploy
     heading: "Update on your onboarding status",
     subtitle: `NPT (${escapedSubsidiary})`,
     bodyHtml,
-    footerContactEmail: NPT_HR_EMAIL,
+    footerContactEmail: ONBOARDLY_HR_EMAIL,
   });
 
   await sendMailAppOnly({
-    from: NPT_HR_EMAIL,
+    from: ONBOARDLY_HR_EMAIL,
     to: [to],
     subject,
     html,

@@ -1,7 +1,8 @@
+// src/lib/mail/employee/sendEmployeeOnboardingOtp.ts
 import { ESubsidiary } from "@/types/shared.types";
 import { sendMailAppOnly } from "@/lib/mail/mailer";
 import { escapeHtml } from "@/lib/mail/utils";
-import { NPT_HR_EMAIL } from "@/config/env";
+import { ONBOARDLY_HR_EMAIL } from "@/config/env";
 import { buildEmployeeEmailLayout } from "@/lib/mail/templates/buildEmployeeEmailLayout";
 
 export type SendEmployeeOnboardingOtpParams = {
@@ -13,8 +14,11 @@ export type SendEmployeeOnboardingOtpParams = {
   expiresInMinutes: number;
 };
 
-export async function sendEmployeeOnboardingOtp(params: SendEmployeeOnboardingOtpParams): Promise<void> {
-  const { to, firstName, lastName, subsidiary, otpCode, expiresInMinutes } = params;
+export async function sendEmployeeOnboardingOtp(
+  params: SendEmployeeOnboardingOtpParams,
+): Promise<void> {
+  const { to, firstName, lastName, subsidiary, otpCode, expiresInMinutes } =
+    params;
 
   const fullName = `${firstName} ${lastName}`.trim();
   const escapedName = escapeHtml(fullName || "there");
@@ -64,11 +68,11 @@ export async function sendEmployeeOnboardingOtp(params: SendEmployeeOnboardingOt
     heading: "Your verification code",
     subtitle: `NPT (${escapedSubsidiary}) Onboarding`,
     bodyHtml,
-    footerContactEmail: NPT_HR_EMAIL,
+    footerContactEmail: ONBOARDLY_HR_EMAIL,
   });
 
   await sendMailAppOnly({
-    from: NPT_HR_EMAIL,
+    from: ONBOARDLY_HR_EMAIL,
     to: [to],
     subject,
     html,

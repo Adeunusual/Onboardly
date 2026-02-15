@@ -1,7 +1,8 @@
+// src/lib/mail/employee/sendEmployeeOnboardingApproved.ts
 import { ESubsidiary } from "@/types/shared.types";
 import { sendMailAppOnly } from "@/lib/mail/mailer";
 import { escapeHtml } from "@/lib/mail/utils";
-import { NPT_HR_EMAIL } from "@/config/env";
+import { ONBOARDLY_HR_EMAIL } from "@/config/env";
 import { buildEmployeeEmailLayout } from "@/lib/mail/templates/buildEmployeeEmailLayout";
 
 export type SendEmployeeOnboardingModificationRequestParams = {
@@ -16,11 +17,16 @@ export type SendEmployeeOnboardingModificationRequestParams = {
   message: string;
 };
 
-export async function sendEmployeeOnboardingModificationRequest(params: SendEmployeeOnboardingModificationRequestParams): Promise<void> {
-  const { to, firstName, lastName, subsidiary, baseUrl, inviteToken, message } = params;
+export async function sendEmployeeOnboardingModificationRequest(
+  params: SendEmployeeOnboardingModificationRequestParams,
+): Promise<void> {
+  const { to, firstName, lastName, subsidiary, baseUrl, inviteToken, message } =
+    params;
 
   if (!inviteToken) {
-    throw new Error("inviteToken is required for onboarding modification emails");
+    throw new Error(
+      "inviteToken is required for onboarding modification emails",
+    );
   }
 
   const fullName = `${firstName} ${lastName}`.trim();
@@ -79,11 +85,11 @@ export async function sendEmployeeOnboardingModificationRequest(params: SendEmpl
     heading: "Updates requested for your onboarding",
     subtitle: `NPT (${escapedSubsidiary})`,
     bodyHtml,
-    footerContactEmail: NPT_HR_EMAIL,
+    footerContactEmail: ONBOARDLY_HR_EMAIL,
   });
 
   await sendMailAppOnly({
-    from: NPT_HR_EMAIL,
+    from: ONBOARDLY_HR_EMAIL,
     to: [to],
     subject,
     html,

@@ -1,7 +1,7 @@
 /**
  * Global CSS Stylesheet
  * 
- * This file contains global styles and utility classes for the NPT Onboarding application.
+ * This file contains global styles and utility classes for the onboardly application.
  * It imports Tailwind CSS and defines custom styles used across the application.
  * 
  * @fileoverview Global application styles including base resets and custom component styles.
@@ -30,13 +30,13 @@ body {
 :root {
   --app-overlay: rgba(15, 23, 42, 0.40);
   --app-modal-surface: #ffffff;
-  --npt-red: #c31c20;
+  --onboardly-red: #c31c20;
 }
 
 /* Theme native form controls consistently (esp. iOS/Android checkboxes). */
 input[type="checkbox"],
 input[type="radio"] {
-  accent-color: var(--npt-red);
+  accent-color: var(--onboardly-red);
 }
 
 /* =========================
@@ -334,14 +334,14 @@ html[data-dash-theme="dark"] .dashboard-root {
 /* Hero Brand Pill Component                                          */
 /* ================================================================== */
 /**
- * Brand pill styling for "NPT Group" text in the hero section.
+ * Brand pill styling for "onboardly" text in the hero section.
  * 
  * Design inspiration: Apple × Linear hybrid aesthetic
  * Creates a distinctive branded badge element with gradient background,
  * used prominently in the onboarding invitation screen hero section.
  * 
  * Features:
- * - Gradient background using NPT brand colors (red spectrum)
+ * - Gradient background using onboardly brand colors (red spectrum)
  * - Pill-shaped border radius for modern appearance
  * - Subtle shadow for depth and elevation
  * - Optical alignment adjustments for visual balance
@@ -357,7 +357,7 @@ html[data-dash-theme="dark"] .dashboard-root {
   /* Soft pill shape with generous border radius */
   border-radius: 12px;
 
-  /* NPT brand gradient: diagonal gradient from lighter to darker red */
+  /* onboardly brand gradient: diagonal gradient from lighter to darker red */
   background: linear-gradient(135deg, #e4494d, #c31c20);
   /* White text for contrast against red gradient */
   color: #ffffff;

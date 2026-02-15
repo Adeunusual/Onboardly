@@ -9,7 +9,7 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }) {
   const cookieStore = await cookies();
-  const rawMode = cookieStore.get("npt.dashboard.theme.mode")?.value;
+  const rawMode = cookieStore.get("onboardly.dashboard.theme.mode")?.value;
   const initialMode =
     rawMode === "light" || rawMode === "dark" || rawMode === "system"
       ? rawMode
@@ -23,14 +23,13 @@ export default async function DashboardLayout({
         strategy="beforeInteractive"
         dangerouslySetInnerHTML={{
           __html:
-            "(function(){try{if(!location.pathname.startsWith('/dashboard'))return;var k='npt.dashboard.theme.mode';var m=localStorage.getItem(k)||'system';var t=(m==='light'||m==='dark')?m:((window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light');document.documentElement.dataset.dashTheme=t;document.cookie='npt.dashboard.theme.mode='+encodeURIComponent(m)+';path=/;max-age=31536000;samesite=lax';}catch(e){}})();",
+            "(function(){try{if(!location.pathname.startsWith('/dashboard'))return;var k='onboardly.dashboard.theme.mode';var m=localStorage.getItem(k)||'system';var t=(m==='light'||m==='dark')?m:((window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light');document.documentElement.dataset.dashTheme=t;document.cookie='onboardly.dashboard.theme.mode='+encodeURIComponent(m)+';path=/;max-age=31536000;samesite=lax';}catch(e){}})();",
         }}
       />
 
       <DashboardThemeProvider initialMode={initialMode}>
-      <DashboardShell>{children}</DashboardShell>
+        <DashboardShell>{children}</DashboardShell>
       </DashboardThemeProvider>
     </>
   );
 }
-

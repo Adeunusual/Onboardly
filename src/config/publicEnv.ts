@@ -5,7 +5,5 @@
  * Provide sensible fallbacks so the UI doesn't regress if an env var is missing.
  */
 
-export const NEXT_PUBLIC_NPT_HR_EMAIL =
-  process.env.NEXT_PUBLIC_NPT_HR_EMAIL || "hr@nptgroup.com";
-
-
+export const NEXT_PUBLIC_ONBOARDLY_HR_EMAIL =
+  process.env.NEXT_PUBLIC_ONBOARDLY_HR_EMAIL || "hr@nptgroup.com";

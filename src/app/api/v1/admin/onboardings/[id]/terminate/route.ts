@@ -1,3 +1,4 @@
+// src/app/api/v1/admin/onboardings/[id]/restore/route.ts
 import { NextRequest } from "next/server";
 import connectDB from "@/lib/utils/connectDB";
 import { errorResponse, successResponse } from "@/lib/utils/apiResponse";
@@ -5,8 +6,15 @@ import { guard } from "@/lib/utils/auth/authUtils";
 
 import { OnboardingModel } from "@/mongoose/models/Onboarding";
 
-import { EOnboardingMethod, EOnboardingStatus, ETerminationType } from "@/types/onboarding.types";
-import { EOnboardingActor, EOnboardingAuditAction } from "@/types/onboardingAuditLog.types";
+import {
+  EOnboardingMethod,
+  EOnboardingStatus,
+  ETerminationType,
+} from "@/types/onboarding.types";
+import {
+  EOnboardingActor,
+  EOnboardingAuditAction,
+} from "@/types/onboardingAuditLog.types";
 import { createOnboardingAuditLogSafe } from "@/lib/utils/onboardingUtils";
 import { parseJsonBody } from "@/lib/utils/reqParser";
 
@@ -30,7 +38,10 @@ type TerminateBody = {
  * - terminationReason is optional free text.
  * - Digital flows must lose invite/otp access immediately.
  */
-export const POST = async (req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
+export const POST = async (
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) => {
   try {
     await connectDB();
     const user = await guard();
@@ -58,6 +69,7 @@ export const POST = async (req: NextRequest, { params }: { params: Promise<{ id:
     const prevStatus = onboarding.status;
     const now = new Date();
 
+    onboarding.lastStatusBeforeTermination = prevStatus;
     onboarding.status = EOnboardingStatus.Terminated;
     onboarding.terminationType = terminationType;
     onboarding.terminationReason = terminationReason;

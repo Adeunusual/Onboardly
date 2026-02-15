@@ -8,17 +8,36 @@ import { errorResponse, successResponse } from "@/lib/utils/apiResponse";
 import { guard } from "@/lib/utils/auth/authUtils";
 import { parseJsonBody } from "@/lib/utils/reqParser";
 import { decryptString, hashString } from "@/lib/utils/encryption";
-import { buildOnboardingInvite, createOnboardingAuditLogSafe } from "@/lib/utils/onboardingUtils";
+import {
+  buildOnboardingInvite,
+  createOnboardingAuditLogSafe,
+} from "@/lib/utils/onboardingUtils";
 import { sendEmployeeOnboardingInvitation } from "@/lib/mail/employee/sendEmployeeOnboardingInvitation";
 
 import { OnboardingModel } from "@/mongoose/models/Onboarding";
 
-import { EOnboardingMethod, EOnboardingStatus, type TOnboarding } from "@/types/onboarding.types";
+import {
+  EOnboardingMethod,
+  EOnboardingStatus,
+  type TOnboarding,
+} from "@/types/onboarding.types";
 import { ESubsidiary } from "@/types/shared.types";
 import type { GraphAttachment } from "@/lib/mail/mailer";
-import { EOnboardingActor, EOnboardingAuditAction } from "@/types/onboardingAuditLog.types";
+import {
+  EOnboardingActor,
+  EOnboardingAuditAction,
+} from "@/types/onboardingAuditLog.types";
 
-import { parseBool, parseIsoDate, inclusiveEndOfDay, parseEnumParam, parsePagination, parseSort, buildMeta, rx } from "@/lib/utils/queryUtils";
+import {
+  parseBool,
+  parseIsoDate,
+  inclusiveEndOfDay,
+  parseEnumParam,
+  parsePagination,
+  parseSort,
+  buildMeta,
+  rx,
+} from "@/lib/utils/queryUtils";
 
 /* -------------------------------------------------------------------------- */
 /* Types                                                                      */
@@ -78,10 +97,20 @@ type OnboardingListFilters = {
 /* Helper: Map TOnboarding → minimal admin list item                         */
 /* -------------------------------------------------------------------------- */
 
-function mapOnboardingToListItem(o: TOnboarding, baseUrl: string): OnboardingListItem {
-  const inviteTokenEncrypted = (o as any).invite?.tokenEncrypted as string | undefined;
-  const inviteToken = inviteTokenEncrypted ? decryptString(inviteTokenEncrypted) : undefined;
-  const inviteUrl = o.method === EOnboardingMethod.DIGITAL && inviteToken ? `${baseUrl}/onboarding?token=${encodeURIComponent(inviteToken)}` : undefined;
+function mapOnboardingToListItem(
+  o: TOnboarding,
+  baseUrl: string,
+): OnboardingListItem {
+  const inviteTokenEncrypted = (o as any).invite?.tokenEncrypted as
+    | string
+    | undefined;
+  const inviteToken = inviteTokenEncrypted
+    ? decryptString(inviteTokenEncrypted)
+    : undefined;
+  const inviteUrl =
+    o.method === EOnboardingMethod.DIGITAL && inviteToken
+      ? `${baseUrl}/onboarding?token=${encodeURIComponent(inviteToken)}`
+      : undefined;
 
   return {
     id: (o as any)._id?.toString?.() ?? (o as any).id ?? "",
@@ -200,12 +229,23 @@ export const GET = async (req: NextRequest) => {
     const statusGroupRaw = sp.get("statusGroup");
 
     if (statusGroupRaw != null) {
-      const allowedStatusGroups = ["pending", "modificationRequested", "pendingReview", "approved", "manual", "terminated"] as const;
+      const allowedStatusGroups = [
+        "pending",
+        "modificationRequested",
+        "pendingReview",
+        "approved",
+        "manual",
+        "terminated",
+      ] as const;
       parseEnumParam(statusGroupRaw, allowedStatusGroups, "statusGroup");
     }
 
     // ── Required: subsidiary context (no cross-mixing between IN/CA/US) :contentReference[oaicite:0]{index=0}
-    const subsidiary = parseEnumParam(sp.get("subsidiary"), Object.values(ESubsidiary) as readonly ESubsidiary[], "subsidiary");
+    const subsidiary = parseEnumParam(
+      sp.get("subsidiary"),
+      Object.values(ESubsidiary) as readonly ESubsidiary[],
+      "subsidiary",
+    );
     if (!subsidiary) {
       return errorResponse(400, "subsidiary query param is required");
     }
@@ -214,7 +254,11 @@ export const GET = async (req: NextRequest) => {
     const q = sp.get("q");
 
     // Method filter: digital / manual
-    const method = parseEnumParam(sp.get("method"), Object.values(EOnboardingMethod) as readonly EOnboardingMethod[], "method");
+    const method = parseEnumParam(
+      sp.get("method"),
+      Object.values(EOnboardingMethod) as readonly EOnboardingMethod[],
+      "method",
+    );
 
     // Status filter (comma-separated list)
     const statusRaw = sp.get("status");
@@ -226,7 +270,9 @@ export const GET = async (req: NextRequest) => {
         .map((s) => s.trim())
         .filter(Boolean);
 
-      const allowed = Object.values(EOnboardingStatus) as readonly EOnboardingStatus[];
+      const allowed = Object.values(
+        EOnboardingStatus,
+      ) as readonly EOnboardingStatus[];
       statuses = parts.map((p) => {
         const val = parseEnumParam(p, allowed, "status");
         // parseEnumParam will throw if invalid
@@ -238,7 +284,10 @@ export const GET = async (req: NextRequest) => {
       const groupMap: Record<string, EOnboardingStatus[]> = {
         pending: [EOnboardingStatus.InviteGenerated],
         modificationRequested: [EOnboardingStatus.ModificationRequested],
-        pendingReview: [EOnboardingStatus.Submitted, EOnboardingStatus.Resubmitted],
+        pendingReview: [
+          EOnboardingStatus.Submitted,
+          EOnboardingStatus.Resubmitted,
+        ],
         approved: [EOnboardingStatus.Approved],
         manual: [EOnboardingStatus.ManualPDFSent],
         terminated: [EOnboardingStatus.Terminated],
@@ -254,11 +303,22 @@ export const GET = async (req: NextRequest) => {
     const isCompleted = parseBool(sp.get("isCompleted"));
 
     // Date filtering (Created / Submitted / Approved / Terminated / Updated)
-    const allowedDateFields = ["created", "submitted", "approved", "terminated", "updated"] as const;
+    const allowedDateFields = [
+      "created",
+      "submitted",
+      "approved",
+      "terminated",
+      "updated",
+    ] as const;
 
-    const dateField = parseEnumParam(sp.get("dateField"), allowedDateFields, "dateField") ?? "created";
+    const dateField =
+      parseEnumParam(sp.get("dateField"), allowedDateFields, "dateField") ??
+      "created";
 
-    const dateFieldMap: Record<(typeof allowedDateFields)[number], keyof TOnboarding> = {
+    const dateFieldMap: Record<
+      (typeof allowedDateFields)[number],
+      keyof TOnboarding
+    > = {
       created: "createdAt",
       submitted: "submittedAt",
       approved: "approvedAt",
@@ -271,21 +331,47 @@ export const GET = async (req: NextRequest) => {
 
     const fromDate = parseIsoDate(fromRaw);
     if (fromRaw && !fromDate) {
-      return errorResponse(400, "Invalid 'from' date. Expected ISO format like 2025-12-12 or full ISO datetime.");
+      return errorResponse(
+        400,
+        "Invalid 'from' date. Expected ISO format like 2025-12-12 or full ISO datetime.",
+      );
     }
 
     const toParsed = parseIsoDate(toRaw);
     if (toRaw && !toParsed) {
-      return errorResponse(400, "Invalid 'to' date. Expected ISO format like 2025-12-17 or full ISO datetime.");
+      return errorResponse(
+        400,
+        "Invalid 'to' date. Expected ISO format like 2025-12-17 or full ISO datetime.",
+      );
     }
 
     const toDate = toParsed ? inclusiveEndOfDay(toParsed, toRaw) : null;
 
     // Pagination & sorting
-    const { page, limit, skip } = parsePagination(sp.get("page"), sp.get("pageSize"), 100);
-    const allowedSortKeys = ["createdAt", "updatedAt", "submittedAt", "approvedAt", "terminatedAt", "firstName", "lastName", "email", "status", "employeeNumber"] as const;
+    const { page, limit, skip } = parsePagination(
+      sp.get("page"),
+      sp.get("pageSize"),
+      100,
+    );
+    const allowedSortKeys = [
+      "createdAt",
+      "updatedAt",
+      "submittedAt",
+      "approvedAt",
+      "terminatedAt",
+      "firstName",
+      "lastName",
+      "email",
+      "status",
+      "employeeNumber",
+    ] as const;
 
-    const { sortBy, sortDir } = parseSort(sp.get("sortBy"), sp.get("sortDir"), allowedSortKeys, "createdAt");
+    const { sortBy, sortDir } = parseSort(
+      sp.get("sortBy"),
+      sp.get("sortDir"),
+      allowedSortKeys,
+      "createdAt",
+    );
 
     // ── Build Mongo filter
     const filter: any = {
@@ -304,16 +390,25 @@ export const GET = async (req: NextRequest) => {
       const tokenAndClauses = tokens.map((t) => {
         const r = rx(t); // your existing helper (likely escapes + case-insensitive)
         return {
-          $or: [{ firstName: r }, { lastName: r }, { email: r }, { employeeNumber: r }],
+          $or: [
+            { firstName: r },
+            { lastName: r },
+            { email: r },
+            { employeeNumber: r },
+          ],
         };
       });
 
       // Require every token to match at least one of the fields
-      filter.$and = filter.$and ? [...filter.$and, ...tokenAndClauses] : tokenAndClauses;
+      filter.$and = filter.$and
+        ? [...filter.$and, ...tokenAndClauses]
+        : tokenAndClauses;
     }
 
     // Default: ignore terminated onboardings unless explicitly requested
-    const includeTerminated = (statuses?.includes(EOnboardingStatus.Terminated) ?? false) || statusGroupRaw === "terminated";
+    const includeTerminated =
+      (statuses?.includes(EOnboardingStatus.Terminated) ?? false) ||
+      statusGroupRaw === "terminated";
 
     if (statuses && statuses.length > 0) {
       filter.status = { $in: statuses };
@@ -328,9 +423,15 @@ export const GET = async (req: NextRequest) => {
       } else {
         // must NOT have an employeeNumber
         const missingEmployeeNumberOr = {
-          $or: [{ employeeNumber: { $exists: false } }, { employeeNumber: null }, { employeeNumber: "" }],
+          $or: [
+            { employeeNumber: { $exists: false } },
+            { employeeNumber: null },
+            { employeeNumber: "" },
+          ],
         };
-        filter.$and = filter.$and ? [...filter.$and, missingEmployeeNumberOr] : [missingEmployeeNumberOr];
+        filter.$and = filter.$and
+          ? [...filter.$and, missingEmployeeNumberOr]
+          : [missingEmployeeNumberOr];
       }
     }
 
@@ -449,10 +550,16 @@ export const POST = async (req: NextRequest) => {
     }
 
     if (subsidiary !== ESubsidiary.INDIA) {
-      return errorResponse(400, "Only INDIA subsidiary onboarding is supported at this time");
+      return errorResponse(
+        400,
+        "Only INDIA subsidiary onboarding is supported at this time",
+      );
     }
 
-    if (method !== EOnboardingMethod.DIGITAL && method !== EOnboardingMethod.MANUAL) {
+    if (
+      method !== EOnboardingMethod.DIGITAL &&
+      method !== EOnboardingMethod.MANUAL
+    ) {
       return errorResponse(400, "Invalid onboarding method");
     }
 
@@ -463,7 +570,10 @@ export const POST = async (req: NextRequest) => {
     }).lean();
 
     if (existing) {
-      return errorResponse(409, "An onboarding already exists for this email in this subsidiary");
+      return errorResponse(
+        409,
+        "An onboarding already exists for this email in this subsidiary",
+      );
     }
 
     const now = new Date();
@@ -474,7 +584,10 @@ export const POST = async (req: NextRequest) => {
       firstName,
       lastName,
       email,
-      status: method === EOnboardingMethod.DIGITAL ? EOnboardingStatus.InviteGenerated : EOnboardingStatus.ManualPDFSent,
+      status:
+        method === EOnboardingMethod.DIGITAL
+          ? EOnboardingStatus.InviteGenerated
+          : EOnboardingStatus.ManualPDFSent,
       isFormComplete: false,
       isCompleted: false,
       createdAt: now,
@@ -534,11 +647,11 @@ export const POST = async (req: NextRequest) => {
         });
       } else {
         // MANUAL: attach blank India onboarding PDF
-        const pdfPath = `${process.cwd()}/src/lib/assets/pdfs/npt-india-application-form.pdf`;
+        const pdfPath = `${process.cwd()}/src/lib/assets/pdfs/onboardly-default-application-form.pdf`;
         const pdfBuffer = await fs.readFile(pdfPath);
 
         const manualFormAttachment: GraphAttachment = {
-          name: "NPT-India-Onboarding-Form.pdf",
+          name: "Onboardly-Default-Onboarding-Form.pdf",
           contentType: "application/pdf",
           base64: pdfBuffer.toString("base64"),
         };
@@ -576,7 +689,10 @@ export const POST = async (req: NextRequest) => {
       try {
         await OnboardingModel.findByIdAndDelete(onboarding._id);
       } catch (cleanupError) {
-        console.error("Failed to rollback onboarding after email error", cleanupError);
+        console.error(
+          "Failed to rollback onboarding after email error",
+          cleanupError,
+        );
       }
 
       throw emailError;
@@ -586,6 +702,7 @@ export const POST = async (req: NextRequest) => {
       onboarding: onboarding.toObject({ virtuals: true, getters: true }),
     });
   } catch (error) {
+    console.log("Error in POST /api/v1/admin/onboardings", error);
     return errorResponse(error);
   }
 };
